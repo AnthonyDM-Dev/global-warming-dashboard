@@ -1,0 +1,73 @@
+:root {
+  --fade-in-duration: 1.5s;
+  --fade-out-duration: 1.5s;
+  --slide-left-duration: 1.5s;
+  --slide-right-duration: 1.5s;
+  --pulsate-duration: 2s;
+}
+.fade-in {
+  animation: fadeIn var(--fade-in-duration) ease-out;
+  &-slide {
+    &-left {
+      animation: fadeIn var(--fade-in-duration) forwards ease-out, slideLeft var(--slide-left-duration) forwards ease-out;  
+    }
+    &-right {
+      animation: fadeIn var(--fade-in-duration) forwards ease-out,  slideRight var(--slide-right-duration) forwards ease-out;  
+    }
+  }
+}
+.fade-out {
+  animation: fadeOut var(--fade-out-duration) forwards ease-out;
+  &-slide {
+    &-left {
+      animation: fadeOut var(--slide-left-duration) forwards ease-out, slideLeft var(--slide-left-duration) forwards ease-out;  
+    }
+    &-right {
+      animation: fadeOut var(--slide-right-duration) forwards ease-out,  slideRight var(--slide-right-duration) forwards ease-out;  
+    }
+  }
+}
+.slide-left {
+  animation: slideLeft var(--slide-left-duration) forwards ease-out;
+}
+.slide-right {
+  animation: slideRight var(--slide-right-duration) forwards ease-out;
+}
+.pulsate {
+  animation: pulsate var(--pulsate-duration) infinite ease-in-out;
+}
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes slideLeft {
+  to {
+    transform: translate(-3%, 0%);
+  }
+}
+@keyframes slideRight {
+  to {
+    transform: translate(3%, 0%);
+  }
+}
+@keyframes pulsate {
+  0% {
+    transform: scale(0.95);
+    text-shadow: 0;
+  }
+  
+  70% {
+    transform: scale(1);
+    text-shadow: -2px 2px 0 #000, 2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000;
+  }
+  
+  100% {
+    transform: scale(0.95);
+    text-shadow: 0;
+  }
+}
