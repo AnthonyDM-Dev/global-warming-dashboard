@@ -41,10 +41,10 @@
             :color="pageColor"
             @go-to="returnToHomepage"
           />
-          <div class="button__arrow-left" @click="browsePage('back')">
+          <div v-if="childPage.isVisible" class="button__arrow-left" @click="browsePage('back')">
             <i class="fa-solid fa-angle-left" />
           </div>
-          <div class="button__arrow-right" @click="browsePage('next')">
+          <div v-if="childPage.isVisible" class="button__arrow-right" @click="browsePage('next')">
             <i class="fa-solid fa-angle-right" />
           </div>
         </div>
