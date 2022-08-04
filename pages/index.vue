@@ -8,7 +8,8 @@
         <div class="page-content__header-side empty" />
         <div class="site-logo" @click="goTo('/')">
           <p class="site-logo__text">
-            Earth Tracker
+            <!-- Earth Tracker -->
+            {{ childPage.isVisible }}
           </p>
         </div>
         <div v-if="!isMobileDevice" class="page-content__header-side volume">
@@ -43,10 +44,10 @@
             :color="pageColor"
             @go-to="returnToHomepage"
           />
-          <div v-if="childPage.isVisible" class="button__arrow-left" @click="browsePage('back')">
+          <div class="button__arrow-left" @click="browsePage('back')">
             <i class="fa-solid fa-angle-left" />
           </div>
-          <div v-if="childPage.isVisible" class="button__arrow-right" @click="browsePage('next')">
+          <div class="button__arrow-right" @click="browsePage('next')">
             <i class="fa-solid fa-angle-right" />
           </div>
         </div>
@@ -287,7 +288,7 @@ export default {
           ? await this.fadeOutSlideElement(childEl, animationDirection)
           : await this.fadeOutElement(childEl)
         await this.triggerChildPageVisibility(false)
-      } else {
+      } else if ((action === 'in' || path !== '/')) {
         await this.triggerChildPageVisibility(true)
       }
     },
