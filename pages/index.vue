@@ -230,13 +230,11 @@ export default {
     async changeChildPageVisibility (action, path, animationDirection) {
       const childEl = document.getElementsByClassName('child-page')[0] || null
       if ((action === 'out' || path === '/') && childEl !== null) {
-        console.log('siamo in if: ', action, path, animationDirection);
         (animationDirection === 'right' || animationDirection === 'left')
           ? await this.fadeOutSlideElement(childEl, animationDirection)
           : await this.fadeOutElement(childEl)
         await this.triggerChildPageVisibility(false)
       } else {
-        console.log('siamo else:', action, path, animationDirection)
         await this.triggerChildPageVisibility(true)
       }
     },
