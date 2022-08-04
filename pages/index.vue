@@ -8,8 +8,7 @@
         <div class="page-content__header-side empty" />
         <div class="site-logo" @click="goTo('/')">
           <p class="site-logo__text">
-            <!-- Earth Tracker -->
-            {{ childPage.isVisible }}
+            Earth Tracker
           </p>
         </div>
         <div v-if="!isMobileDevice" class="page-content__header-side volume">
