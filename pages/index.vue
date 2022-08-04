@@ -6,7 +6,7 @@
     <div class="page-content">
       <div class="page-content__header">
         <div class="page-content__header-side empty" />
-        <div class="site-logo" @click="goTo('/')">
+        <div class="site-logo" @click="returnToHomepage">
           <p class="site-logo__text">
             Earth Tracker
           </p>

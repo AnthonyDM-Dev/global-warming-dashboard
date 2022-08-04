@@ -1,6 +1,6 @@
 <template>
   <div class="heading">
-    <video class="heading__video" autoplay loop preload>
+    <video class="heading__video" autoplay loop preload playsinline>
       <source :src="'/videos/' + video" type="video/mp4">
     </video>
     <div class="heading__overlay" />

@@ -19,18 +19,12 @@ export default {
       {
         src: 'https://kit.fontawesome.com/9a2c4fe4ba.js',
         crossorigin: 'anonymous'
-      }/* ,
-      // ChartJS
-      {
-        src: 'https://cdn.jsdelivr.net/npm/chart.js@3.8.2/dist/chart.min.js'
-      }, */
-      // Time adapters (https://www.chartjs.org/docs/latest/getting-started/v3-migration.html#setup-and-installation)
-      /* {
-        src: 'https://cdn.jsdelivr.net/npm/moment@2.27.0'
       },
+      // Polyfill.io
       {
-        src: 'https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1'
-      } */
+        src: 'https://polyfill.io/v3/polyfill.min.js?features=window.scroll%2Csmoothscroll%2Cwindow.scrollBy%2Cscroll',
+        body: true
+      }
     ]
   },
 
