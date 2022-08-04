@@ -5,16 +5,18 @@
     </div>
     <div class="page-content">
       <div class="page-content__header">
+        <div class="page-content__header-side empty" />
         <div class="site-logo" @click="goTo('/')">
           <p class="site-logo__text">
             Earth Tracker
           </p>
         </div>
-        <div class="volume">
-          <audio autoplay>
+        <div v-if="!isMobileDevice" class="page-content__header-side volume">
+          <audio autoplay loop>
             <source :src="require('@/assets/sounds/space.mp3')" type="audio/mpeg">
           </audio>
-          <i class="fa-solid fa-volume-xmark" />
+          <i v-if="!audio.isPlaying" class="fa-solid fa-volume-xmark" @click="playAudio('play')" />
+          <i v-else class="fa-solid fa-volume-high" @click="playAudio('pause')" />
         </div>
       </div>
       <div class="page-content__body">
@@ -58,10 +60,18 @@
       :has-start-button="banner.hasStartButton"
       @trigger-banner="triggerBanner"
     />
+    <div v-if="isMobileDevice" class="volume volume__mobile">
+      <audio autoplay loop>
+        <source :src="require('@/assets/sounds/space.mp3')" type="audio/mpeg">
+      </audio>
+      <i v-if="!audio.isPlaying" class="fa-solid fa-volume-xmark" @click="playAudio('play')" />
+      <i v-else class="fa-solid fa-volume-high" @click="playAudio('pause')" />
+    </div>
   </div>
 </template>
 
 <script>
+import global from '../mixins/global.js'
 import EarthModel from '../components/EarthModel.vue'
 import PropertyCard from '../components/PropertyCard.vue'
 import BannerCover from '../components/BannerCover.vue'
@@ -72,8 +82,13 @@ export default {
     PropertyCard,
     BannerCover
   },
+  mixins: [global],
   data () {
     return {
+      isMobileDevice: null,
+      audio: {
+        isPlaying: false
+      },
       banner: {
         isVisible: true,
         hasStartButton: false
@@ -95,7 +110,10 @@ export default {
             pageTitle: 'Temperature',
             description: 'The total average global temperature rise since the industrial revolution is around (1.0 °C / 1.8 °F). Earth northern hemisphere is warming faster. The arctic has warmed between (2 °C / 3.6 °F) and (4 °C / 7.2 °F).',
             link: '/temperaturepage',
-            video: 'temperature.mp4',
+            video: {
+              desktop: 'temperature.mp4',
+              mobile: 'temperature-mobile.mp4'
+            },
             youtubeLink: 'https://www.youtube-nocookie.com/embed/3sqdyEpklFU',
             backgroundColor: 'rgb(253 21 27 / 40%)',
             isOpen: false
@@ -106,7 +124,10 @@ export default {
             pageTitle: 'Carbon Dioxide',
             description: 'For thousands of years, the natural concentration of CO2 in earth atmosphere was around 280 ppm. From the beginning of the industrial revolution, human activities like the burning of fossil fuels, deforestation, and livestock have increased this amount by more than 30%.',
             link: '/carbondioxidepage',
-            video: 'carbondioxide.mp4',
+            video: {
+              desktop: 'carbondioxide.mp4',
+              mobile: 'carbondioxide-mobile.mp4'
+            },
             youtubeLink: 'https://www.youtube-nocookie.com/embed/0oQ_l-1IdOs',
             backgroundColor: 'rgb(255 179 15 / 40%)',
             isOpen: false
@@ -117,7 +138,10 @@ export default {
             pageTitle: 'Methane',
             description: '50-65% of total global methane emissions come from human activities. These include livestock, agriculture, oil and gas systems, waste from homes and businesses, landfills, and so on.',
             link: '/methanepage',
-            video: 'methane.mp4',
+            video: {
+              desktop: 'methane.mp4',
+              mobile: 'methane-mobile.mp4'
+            },
             youtubeLink: 'https://www.youtube-nocookie.com/embed/hHB47RMOi5M',
             backgroundColor: 'rgb(132 147 36 / 40%)',
             isOpen: false
@@ -128,7 +152,10 @@ export default {
             pageTitle: 'Nitrous Oxide',
             description: 'Nitrous oxide is a gas that is produced by the combustion of fossil fuel and solid waste, nitrogen-base fertilizers, sewage treatment plants, natural processes, and other agricultural and industrial activities.',
             link: '/nitrousoxidepage',
-            video: 'nitrousoxide.mp4',
+            video: {
+              desktop: 'nitrousoxide.mp4',
+              mobile: 'nitrousoxide-mobile.mp4'
+            },
             youtubeLink: 'https://www.youtube-nocookie.com/embed/ivp3XXSnwvM',
             backgroundColor: 'rgb(67 127 151 / 40%)',
             isOpen: false
@@ -139,7 +166,10 @@ export default {
             pageTitle: 'Polar Ice',
             description: 'The arctic is warming around twice as fast as global average. Some of the reasons for this are: The arctic amplification, the albedo effect, and black carbon. From 1979 to 1996, we lost 2.2 – 3% of the arctic ice cover. From 2010 to present we are losing 12.85% per decade!',
             link: '/polaricepage',
-            video: 'polarice.mp4',
+            video: {
+              desktop: 'polarice.mp4',
+              mobile: 'polarice-mobile.mp4'
+            },
             youtubeLink: 'https://www.youtube-nocookie.com/embed/hlVXOC6a3ME',
             backgroundColor: 'rgb(1 41 95 / 40%)',
             isOpen: false
@@ -155,16 +185,28 @@ export default {
       })
     },
     pageColor () {
-      return this.page?.backgroundColor || null
+      if (!this.page) {
+        return
+      }
+      return this.page.backgroundColor
     },
     pageVideo () {
-      return this.page?.video || null
+      if (!this.page) {
+        return
+      }
+      return this.isMobile ? this.page.video.mobile : this.page.video.desktop
     },
     pageYoutube () {
-      return this.page?.youtubeLink || null
+      if (!this.page) {
+        return
+      }
+      return this.page.youtubeLink
     },
     pageTitle () {
-      return this.page?.pageTitle || null
+      if (!this.page) {
+        return
+      }
+      return this.page.pageTitle
     }
   },
   watch: {
@@ -179,19 +221,30 @@ export default {
       }
     }
   },
-  /* mounted: {
-    document.ondragstart = () => false;
+  mounted () {
+    this.isMobileDevice = this.isMobile
+    /* document.ondragstart = () => false;
     document.addEventListener('pointerdown', (event) => {
       if (event.target.closest('button')) return;
       this.setPointerCoords('down', [event.clientX, event.clientY]);
     })
     document.addEventListener('pointerup', (event) => {
       this.setPointerCoords('up', [event.clientX, event.clientY]);
-    })
-  }, */
+    }) */
+  },
   methods: {
     triggerStartButton () {
       this.banner.hasStartButton = !this.banner.hasStartButton
+    },
+    playAudio (action) {
+      const audioEl = document.getElementsByTagName('audio')[0]
+      if (action === 'play') {
+        this.audio.isPlaying = true
+        audioEl.play()
+      } else if (action === 'pause') {
+        this.audio.isPlaying = false
+        audioEl.pause()
+      }
     },
     async browsePage (action) {
       const nextPage = this.properties.list[this.page.index + 1] || this.properties.list[0]
@@ -250,6 +303,7 @@ export default {
       banner.addEventListener('animationend', () => {
         banner.remove()
         this.startIntro()
+        this.playAudio('play')
       })
       await setTimeout(() => {
         this.banner.isVisible = !this.banner.isVisible

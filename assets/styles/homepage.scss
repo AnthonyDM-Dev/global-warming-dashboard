@@ -15,8 +15,11 @@
     &__header {
       width: 100%;
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
+      &-side {
+        width: 60px;
+      }
     }
     &__body {
       max-width: 1200px;
@@ -32,11 +35,17 @@
     }
   }
   .volume {
-    position: absolute;
-    top: 5%;
-    right: 5%;
     color: white;
     font-size: 30px;
+    i {
+      cursor: pointer;
+    }
+    &__mobile {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      z-index: 3
+    }
   }
   .heading {
     text-align: center;
@@ -87,6 +96,16 @@
         font-size: 50px;
         font-weight: 100;
         text-shadow: -2px 2px 0 #fff, 2px 2px 0 #fff, 2px -2px 0 #fff, -2px -2px 0 #fff;
+      }
+    }
+  }
+  @media screen and (max-width: 767px) {
+    .page-content {
+      &__header {
+        justify-content: center;
+        &-side {
+          display: none;
+        }
       }
     }
   }
