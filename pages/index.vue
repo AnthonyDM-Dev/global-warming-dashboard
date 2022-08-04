@@ -12,11 +12,11 @@
           </p>
         </div>
         <div v-if="!isMobileDevice" class="page-content__header-side volume">
-          <audio autoplay loop>
+          <!--<audio autoplay loop>
             <source :src="require('@/assets/sounds/space.mp3')" type="audio/mpeg">
-          </audio>
-          <i v-if="!audio.isPlaying" class="fa-solid fa-volume-xmark" @click="playAudio('play')" />
-          <i v-else class="fa-solid fa-volume-high" @click="playAudio('pause')" />
+          </audio>-->
+          <i v-if="audio.isMuted" class="fa-solid fa-volume-xmark" @click="setAudio('unmute')" />
+          <i v-else class="fa-solid fa-volume-high" @click="setAudio('mute')" />
         </div>
       </div>
       <div class="page-content__body">
@@ -31,7 +31,7 @@
             :description="property.description"
             :link="property.link"
             :background-color="property.backgroundColor"
-            @go-to="goTo"
+            @go-to="diveIn"
           />
         </div>
         <div v-if="childPage.isVisible" class="child-page__container">
@@ -52,7 +52,7 @@
         </div>
       </div>
     </div>
-    <div class="skip-button" @click="endIntro">
+    <div class="skip-button" @click="skipIntro">
       <p>Skip</p>
     </div>
     <BannerCover
@@ -61,11 +61,11 @@
       @trigger-banner="triggerBanner"
     />
     <div v-if="isMobileDevice" class="volume volume__mobile">
-      <audio autoplay loop>
+      <!--<audio autoplay loop>
         <source :src="require('@/assets/sounds/space.mp3')" type="audio/mpeg">
-      </audio>
-      <i v-if="!audio.isPlaying" class="fa-solid fa-volume-xmark" @click="playAudio('play')" />
-      <i v-else class="fa-solid fa-volume-high" @click="playAudio('pause')" />
+      </audio>-->
+      <i v-if="audio.isMuted" class="fa-solid fa-volume-xmark" @click="setAudio('unmute')" />
+      <i v-else class="fa-solid fa-volume-high" @click="setAudio('mute')" />
     </div>
   </div>
 </template>
@@ -87,7 +87,14 @@ export default {
     return {
       isMobileDevice: null,
       audio: {
-        isPlaying: false
+        isPlaying: false,
+        isMuted: false,
+        list: {
+          background: null,
+          home: null,
+          dive: null,
+          slide: null
+        }
       },
       banner: {
         isVisible: true,
@@ -223,32 +230,46 @@ export default {
   },
   mounted () {
     this.isMobileDevice = this.isMobile
-    /* document.ondragstart = () => false;
-    document.addEventListener('pointerdown', (event) => {
-      if (event.target.closest('button')) return;
-      this.setPointerCoords('down', [event.clientX, event.clientY]);
-    })
-    document.addEventListener('pointerup', (event) => {
-      this.setPointerCoords('up', [event.clientX, event.clientY]);
-    }) */
+    this.audio.list.background = new Audio(require('@/assets/sounds/space.mp3'))
+    this.audio.list.home = new Audio(require('@/assets/sounds/home.wav'))
+    this.audio.list.dive = new Audio(require('@/assets/sounds/dive.wav'))
+    this.audio.list.slide = new Audio(require('@/assets/sounds/slide.wav'))
   },
   methods: {
+    skipIntro () {
+      this.playAudio('home')
+      this.endIntro()
+    },
+    diveIn (event) {
+      this.playAudio('dive')
+      this.goTo(event)
+    },
     triggerStartButton () {
       this.banner.hasStartButton = !this.banner.hasStartButton
     },
-    playAudio (action) {
-      const audioEl = document.getElementsByTagName('audio')[0]
+    setAudio (action) {
       if (action === 'play') {
+        this.audio.list.background.loop = true
+        this.audio.list.background.play()
         this.audio.isPlaying = true
-        audioEl.play()
-      } else if (action === 'pause') {
-        this.audio.isPlaying = false
-        audioEl.pause()
+      } else if (action === 'unmute') {
+        this.audio.list.background.muted = false
+        this.audio.isMuted = false
+      } else if (action === 'mute') {
+        this.audio.list.background.muted = true
+        this.audio.isMuted = true
       }
+    },
+    playAudio (type) {
+      if (this.audio.isMuted) {
+        return
+      }
+      this.audio.list[type].play()
     },
     async browsePage (action) {
       const nextPage = this.properties.list[this.page.index + 1] || this.properties.list[0]
       const backPage = this.properties.list[this.page.index - 1] || this.properties.list[4]
+      this.playAudio('slide')
       if (action === 'next') {
         // await this.fadeOutSlideElement(childEl, 'right')
         await this.changeChildPageVisibility('out', nextPage.link, 'right')
@@ -267,6 +288,7 @@ export default {
       })
     },
     async returnToHomepage () {
+      this.playAudio('home')
       this.scrollToTop()
       await this.changeChildPageVisibility('out', '/', null)
       this.goTo('/')
@@ -303,7 +325,7 @@ export default {
       banner.addEventListener('animationend', () => {
         banner.remove()
         this.startIntro()
-        this.playAudio('play')
+        this.setAudio('play')
       })
       await setTimeout(() => {
         this.banner.isVisible = !this.banner.isVisible
