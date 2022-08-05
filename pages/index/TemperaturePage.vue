@@ -5,11 +5,6 @@
       :video="video"
       :title="title"
     />
-    <div class="actions">
-      <button class="actions__button-back" @click="$emit('go-to')">
-        <p>GO BACK</p>
-      </button>
-    </div>
     <div class="description">
       <p>Given the tremendous size and heat capacity of the global oceans, it takes a massive amount of heat energy to raise Earth’s average yearly surface temperature even a small amount. The roughly 2-degree Fahrenheit (1 degrees Celsius) increase in global average surface temperature that has occurred since the pre-industrial era (1880-1900) might seem small, but it means a significant increase in accumulated heat.</p>
       <br>
@@ -103,7 +98,14 @@ export default {
               y: {
                 type: 'linear',
                 min: null,
-                max: null
+                max: null,
+                title: {
+                  display: true,
+                  text: 'Temperature (°C)',
+                  font: {
+                    size: 16
+                  }
+                }
               }
             },
             interaction: {
@@ -127,7 +129,7 @@ export default {
               },
               title: {
                 display: true,
-                text: 'Global average surface temperature',
+                text: 'Global surface temperature change',
                 font: {
                   size: 20,
                   family: "'Raleway', 'sans-serif'",
@@ -155,8 +157,8 @@ export default {
         return
       }
       this.getChartData()
-      this.updateMinY(this.settings, this.temperatureData, ['land', 'station'], 0.3, 9999)
-      this.updateMaxY(this.settings, this.temperatureData, ['land', 'station'], 0.3, 0)
+      this.updateMinY(this.settings, this.temperatureData, ['land', 'station'], 0.3, 9999, 'y')
+      this.updateMaxY(this.settings, this.temperatureData, ['land', 'station'], 0.3, 0, 'y')
       this.updateChartData(this.settings, 'lineChart', this.chartData)
     }
   },
@@ -173,16 +175,18 @@ export default {
         labels: this.temperatureData.map((r) => { return r.time }),
         datasets: [
           {
-            label: 'Measured on land',
+            label: 'Measured from land',
             borderColor: '#a32525',
+            backgroundColor: 'transparent',
             borderWidth: 1,
             radius: this.isMobile ? 0 : 2,
             showLine: this.isMobile,
             data: this.parseData('time', 'land')
           },
           {
-            label: 'Measured on space station',
+            label: 'Measured from space station',
             borderColor: 'yellow',
+            backgroundColor: 'transparent',
             borderWidth: 1,
             radius: this.isMobile ? 0 : 2,
             showLine: this.isMobile,

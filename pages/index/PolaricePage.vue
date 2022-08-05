@@ -5,15 +5,10 @@
       :video="video"
       :title="title"
     />
-    <div class="actions">
-      <button class="actions__button-back" @click="$emit('go-to')">
-        <p>GO BACK</p>
-      </button>
-    </div>
     <div class="description">
-      <p>Given the tremendous size and heat capacity of the global oceans, it takes a massive amount of heat energy to raise Earth’s average yearly surface temperature even a small amount. The roughly 2-degree Fahrenheit (1 degrees Celsius) increase in global average surface temperature that has occurred since the pre-industrial era (1880-1900) might seem small, but it means a significant increase in accumulated heat.</p>
+      <p>The Arctic is warming three times as fast and the global average. This is mainly because melting of snow and ice exposes a darker surface and increases the amount of solar energy absorbed in these areas &#40;albedo effect&#41;. This significant regional warming leads to continued loss of sea ice, melting of glaciers and of the Greenland ice cap.</p>
       <br>
-      <p>That extra heat is driving regional and seasonal temperature extremes, reducing snow cover and sea ice, intensifying heavy rainfall, and changing habitat ranges for plants and animals—expanding some and shrinking others.</p>
+      <p>Warming may influence bottom water formation through surface warming and increased input of fresh water; this would have impact on the “motor” in the ocean system, which in turn defines the framework for the world’s climate. Glaciers melt and contribute strongly toward rising sea levels.</p>
     </div>
     <div class="graphic">
       <LineChart
@@ -103,7 +98,14 @@ export default {
               y: {
                 type: 'linear',
                 min: 0,
-                max: 10
+                max: 10,
+                title: {
+                  display: true,
+                  text: 'Square kilometer (km2)',
+                  font: {
+                    size: 16
+                  }
+                }
               }
             },
             interaction: {
@@ -127,7 +129,7 @@ export default {
               },
               title: {
                 display: true,
-                text: 'Polar Ice melting percentage',
+                text: 'Arctic marine surface extension',
                 font: {
                   size: 20,
                   family: "'Raleway', 'sans-serif'",
@@ -145,6 +147,7 @@ export default {
     try {
       res = await Service.getArctic()
       this.polariceData = this.formatTime(res.data.arcticData, 'splittedData', ['year', 'month'])
+      this.polariceData = this.removeNoise(this.polariceData, 'data-type', 'NRTSI-G')
     } catch (e) {
       res = { data: 'Something went wrong with the request. Please try again later' }
     }
@@ -155,12 +158,15 @@ export default {
         return
       }
       this.getChartData()
-      this.updateMinY(this.settings, this.polariceData, ['extent', 'area'], 1, 9999)
-      this.updateMaxY(this.settings, this.polariceData, ['extent', 'area'], 1, 0)
+      this.updateMinY(this.settings, this.polariceData, ['extent'], 1, 9999, 'y')
+      this.updateMaxY(this.settings, this.polariceData, ['extent'], 1, 0, 'y')
       this.updateChartData(this.settings, 'lineChart', this.chartData)
     }
   },
   methods: {
+    removeNoise (data, key, value) {
+      return data.filter((a) => { return a[key] !== value })
+    },
     parseData (xValue, yValue) {
       return this.polariceData.map((r) => {
         return {
@@ -173,21 +179,13 @@ export default {
         labels: this.polariceData.map((r) => { return r.time }),
         datasets: [
           {
-            label: 'Polar Ice melting percentage',
+            label: 'Arctic extension',
             borderColor: 'rgb(56, 47, 202)',
+            backgroundColor: 'transparent',
             borderWidth: 1,
             radius: 0,
             showLine: true,
             data: this.parseData('time', 'extent')
-          }, {
-            label: 'Average increment',
-            borderColor: '#000000',
-            fill: false,
-            borderDash: [6],
-            borderWidth: 1,
-            radius: 0,
-            showLine: true,
-            data: this.parseData('time', 'area')
           }
         ]
       }

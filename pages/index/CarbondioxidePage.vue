@@ -5,15 +5,10 @@
       :video="video"
       :title="title"
     />
-    <div class="actions">
-      <button class="actions__button-back" @click="$emit('go-to')">
-        <p>GO BACK</p>
-      </button>
-    </div>
     <div class="description">
-      <p>Given the tremendous size and heat capacity of the global oceans, it takes a massive amount of heat energy to raise Earth’s average yearly surface temperature even a small amount. The roughly 2-degree Fahrenheit (1 degrees Celsius) increase in global average surface temperature that has occurred since the pre-industrial era (1880-1900) might seem small, but it means a significant increase in accumulated heat.</p>
+      <p>Carbon dioxide is an important heat-trapping gas, or greenhouse gas, that comes from the extraction and burning of fossil fuels (such as coal, oil, and natural gas), from wildfires, and from natural processes like volcanic eruptions.</p>
       <br>
-      <p>That extra heat is driving regional and seasonal temperature extremes, reducing snow cover and sea ice, intensifying heavy rainfall, and changing habitat ranges for plants and animals—expanding some and shrinking others.</p>
+      <p>These carbon emissions raise global temperatures by trapping solar energy in the atmosphere. This alters water supplies and weather patterns, changes the growing season for food crops and threatens coastal communities with increasing sea levels.</p>
     </div>
     <div class="graphic">
       <LineChart
@@ -102,8 +97,15 @@ export default {
               },
               y: {
                 type: 'linear',
-                min: 370,
-                max: 430
+                min: null,
+                max: null,
+                title: {
+                  display: true,
+                  text: 'Parts per million (ppm)',
+                  font: {
+                    size: 16
+                  }
+                }
               }
             },
             interaction: {
@@ -127,7 +129,7 @@ export default {
               },
               title: {
                 display: true,
-                text: 'CO2 concentration in the atmosphere',
+                text: 'CO2 in the atmosphere',
                 font: {
                   size: 20,
                   family: "'Raleway', 'sans-serif'",
@@ -155,8 +157,8 @@ export default {
         return
       }
       this.getChartData()
-      this.updateMinY(this.settings, this.carbondioxideData, ['cycle', 'trend'], 5, 9999)
-      this.updateMaxY(this.settings, this.carbondioxideData, ['cycle', 'trend'], 5, 0)
+      this.updateMinY(this.settings, this.carbondioxideData, ['cycle', 'trend'], 5, 9999, 'y')
+      this.updateMaxY(this.settings, this.carbondioxideData, ['cycle', 'trend'], 5, 0, 'y')
       this.updateChartData(this.settings, 'lineChart', this.chartData)
     }
   },
@@ -173,8 +175,9 @@ export default {
         labels: this.carbondioxideData.map((r) => { return r.time }),
         datasets: [
           {
-            label: 'CO2 concentration',
+            label: 'CO2 cycle',
             borderColor: 'rgb(56, 47, 202)',
+            backgroundColor: 'transparent',
             borderWidth: 1,
             radius: 0,
             showLine: true,
@@ -182,6 +185,7 @@ export default {
           }, {
             label: 'Average increment',
             borderColor: '#000000',
+            backgroundColor: 'transparent',
             fill: false,
             borderDash: [6],
             borderWidth: 1,

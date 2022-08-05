@@ -25,21 +25,19 @@ export default {
     updateChartData (settings, chartType, chartData) {
       settings[chartType].data = chartData
     },
-    updateMinY (settings, array, fields, margin, initialValue) {
+    updateMinY (settings, array, fields, margin, initialValue, yAxis) {
       const minValues = []
       for (let i = 0; i < fields.length; i++) {
         minValues.push(array.reduce((accumulator, curr) => { return accumulator < Number(curr[fields[i]]) ? accumulator : Number(curr[fields[i]]) }, initialValue))
       }
-      console.log('min: ', minValues, Math.min(...minValues) - margin)
-      settings.lineChart.options.scales.y.min = Math.min(...minValues) - margin
+      settings.lineChart.options.scales[yAxis].min = Math.min(...minValues) - margin
     },
-    updateMaxY (settings, array, fields, margin, initialValue) {
+    updateMaxY (settings, array, fields, margin, initialValue, yAxis) {
       const maxValues = []
       for (let i = 0; i < fields.length; i++) {
         maxValues.push(array.reduce((accumulator, curr) => { return accumulator > Number(curr[fields[i]]) ? accumulator : Number(curr[fields[i]]) }, initialValue))
       }
-      console.log('max: ', maxValues, Math.max(...maxValues) + margin)
-      settings.lineChart.options.scales.y.max = Math.max(...maxValues) + margin
+      settings.lineChart.options.scales[yAxis].max = Math.max(...maxValues) + margin
     }
   },
   computed: {

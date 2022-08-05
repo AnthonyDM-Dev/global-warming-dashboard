@@ -1,7 +1,7 @@
 <template>
   <div class="banner__cover" :class="{ 'fade-out': !isVisible }">
     <h1 class="banner__header pulsate">
-      Earth Tracker
+      iEarth
     </h1>
     <p
       class="banner__button"

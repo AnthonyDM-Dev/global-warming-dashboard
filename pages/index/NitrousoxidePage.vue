@@ -5,15 +5,10 @@
       :video="video"
       :title="title"
     />
-    <div class="actions">
-      <button class="actions__button-back" @click="$emit('go-to')">
-        <p>GO BACK</p>
-      </button>
-    </div>
     <div class="description">
-      <p>Given the tremendous size and heat capacity of the global oceans, it takes a massive amount of heat energy to raise Earth’s average yearly surface temperature even a small amount. The roughly 2-degree Fahrenheit (1 degrees Celsius) increase in global average surface temperature that has occurred since the pre-industrial era (1880-1900) might seem small, but it means a significant increase in accumulated heat.</p>
+      <p>Nitrous oxide is a by-product of biological activity of a symbiotic bacteria living in leguminous plant roots. This is a principal greenhouse gas that absorbs in the infrared wavelength region and unfortunately falls in an IR 'window' between IR absorbing features of water and carbon dioxide &#40;a characteristic of all the 'trace' greenhouse gases with significant radiative forcing&#41;.</p>
       <br>
-      <p>That extra heat is driving regional and seasonal temperature extremes, reducing snow cover and sea ice, intensifying heavy rainfall, and changing habitat ranges for plants and animals—expanding some and shrinking others.</p>
+      <p>Since the Industrial Revolution, human sources of nitrous oxide emissions have been growing. Activities such as agriculture, fossil fuel combustion and industrial processes are the primary cause of the increased nitrous oxide concentrations in the atmosphere. Together these sources are responsible for 77% of all human nitrous oxide emissions.</p>
     </div>
     <div class="graphic">
       <LineChart
@@ -102,8 +97,27 @@ export default {
               },
               y: {
                 type: 'linear',
-                min: 300,
-                max: 350
+                min: null,
+                max: null,
+                position: 'left',
+                display: true,
+                title: {
+                  display: true,
+                  text: 'Parts per million (ppm)',
+                  font: {
+                    size: 16
+                  }
+                }
+              },
+              y1: {
+                type: 'linear',
+                min: null,
+                max: null,
+                position: 'right',
+                display: false,
+                grid: {
+                  drawOnChartArea: false
+                }
               }
             },
             interaction: {
@@ -127,7 +141,7 @@ export default {
               },
               title: {
                 display: true,
-                text: 'Nitrous Oxide concentration in the atmosphere',
+                text: 'Nitrous Oxide in the atmosphere',
                 font: {
                   size: 20,
                   family: "'Raleway', 'sans-serif'",
@@ -155,8 +169,10 @@ export default {
         return
       }
       this.getChartData()
-      this.updateMinY(this.settings, this.nitrousoxideData, ['average', 'trend'], 5, 9999)
-      this.updateMaxY(this.settings, this.nitrousoxideData, ['average', 'trend'], 5, 0)
+      this.updateMinY(this.settings, this.nitrousoxideData, ['average', 'trend'], 5, 9999, 'y')
+      this.updateMaxY(this.settings, this.nitrousoxideData, ['average', 'trend'], 5, 0, 'y')
+      this.updateMinY(this.settings, this.nitrousoxideData, ['averageUnc'], 3, 9999, 'y1')
+      this.updateMaxY(this.settings, this.nitrousoxideData, ['averageUnc'], 3, -1000, 'y1')
       this.updateChartData(this.settings, 'lineChart', this.chartData)
     }
   },
@@ -175,20 +191,35 @@ export default {
           {
             label: 'Nitrous Oxide concentration',
             borderColor: 'rgb(56, 47, 202)',
+            backgroundColor: 'transparent',
             borderWidth: 1,
             radius: 0,
             showLine: true,
-            data: this.parseData('time', 'average')
+            data: this.parseData('time', 'average'),
+            yAxisID: 'y'
           }, {
             label: 'Average increment',
             borderColor: '#000000',
+            backgroundColor: 'transparent',
             fill: false,
             borderDash: [6],
             borderWidth: 1,
             radius: 0,
             showLine: true,
-            data: this.parseData('time', 'trend')
-          }
+            data: this.parseData('time', 'trend'),
+            yAxisID: 'y'
+          }/* , {
+            label: 'NO2 emissions',
+            borderColor: 'red',
+            backgroundColor: 'transparent',
+            fill: false,
+            borderDash: [6],
+            borderWidth: 1,
+            radius: 0,
+            showLine: true,
+            data: this.parseData('time', 'averageUnc'),
+            yAxisID: 'y1'
+          } */
         ]
       }
     }

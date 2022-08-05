@@ -8,7 +8,7 @@
         <div class="page-content__header-side empty" />
         <div class="site-logo" @click="returnToHomepage">
           <p class="site-logo__text">
-            Earth Tracker
+            iEarth
           </p>
         </div>
         <div v-if="!isMobileDevice" class="page-content__header-side volume">
@@ -101,8 +101,8 @@ export default {
         hasStartButton: false
       },
       phrases: [
-        'The earth is sick.',
         'Climate change is REAL.',
+        'The earth is sick.',
         'Watch it by yourself.'
       ],
       childPage: {
@@ -157,7 +157,7 @@ export default {
             index: 3,
             cardTitle: 'N2O',
             pageTitle: 'Nitrous Oxide',
-            description: 'Nitrous oxide is a gas that is produced by the combustion of fossil fuel and solid waste, nitrogen-base fertilizers, sewage treatment plants, natural processes, and other agricultural and industrial activities.',
+            description: 'Nitrous oxide is 300 times more potent than carbon dioxide. Since it also has a shorter life span, reducing it could have a faster, significant impact on global warming. The largest source of nitrous oxide is agriculture, particularly fertilized soil and animal waste, and that makes it harder to rein in.',
             link: '/nitrousoxidepage',
             video: {
               desktop: 'nitrousoxide.mp4',
