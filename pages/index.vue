@@ -157,7 +157,7 @@ export default {
             index: 3,
             cardTitle: 'N2O',
             pageTitle: 'Nitrous Oxide',
-            description: 'Nitrous oxide is 300 times more potent than carbon dioxide. Since it also has a shorter life span, reducing it could have a faster, significant impact on global warming. The largest source of nitrous oxide is agriculture, particularly fertilized soil and animal waste, and that makes it harder to rein in.',
+            description: 'Nitrous oxide is 300 times more potent than carbon dioxide and reducing it could have a faster, significant impact on global warming. The largest source of nitrous oxide is agriculture, particularly fertilized soil and animal waste, and that makes it harder to rein in.',
             link: '/nitrousoxidepage',
             video: {
               desktop: 'nitrousoxide.mp4',
@@ -271,11 +271,9 @@ export default {
       const backPage = this.properties.list[this.page.index - 1] || this.properties.list[4]
       this.playAudio('slide')
       if (action === 'next') {
-        // await this.fadeOutSlideElement(childEl, 'right')
         await this.changeChildPageVisibility('out', nextPage.link, 'right')
         this.goTo(nextPage.link)
       } else if (action === 'back') {
-        // await this.fadeOutSlideElement(childEl, 'left')
         await this.changeChildPageVisibility('out', backPage.link, 'left')
         this.goTo(backPage.link)
       }

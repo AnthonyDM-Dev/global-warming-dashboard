@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const apiClient = axios.create({
-  baseURL: 'https://global-warming.org/api',
+  baseURL: process.env.API_CLIENT_LINK,
   withCredentials: false,
   headers: {
     Accept: 'application/json',
