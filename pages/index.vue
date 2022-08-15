@@ -12,11 +12,8 @@
           </p>
         </div>
         <div v-if="!isMobileDevice" class="page-content__header-side volume">
-          <!--<audio autoplay loop>
-            <source :src="require('@/assets/sounds/space.mp3')" type="audio/mpeg">
-          </audio>-->
-          <i v-if="audio.isMuted" class="fa-solid fa-volume-xmark" @click="setAudio('unmute')" />
-          <i v-else class="fa-solid fa-volume-high" @click="setAudio('mute')" />
+          <i v-if="audio.isMuted" class="fa-solid fa-volume-xmark" @click="handleAudio('triggerMute')" />
+          <i v-else class="fa-solid fa-volume-high" @click="handleAudio('triggerMute')" />
         </div>
       </div>
       <div class="page-content__body">
@@ -37,10 +34,11 @@
         <div v-if="childPage.isVisible" class="child-page__container">
           <NuxtChild
             class="fade-in"
-            :title="pageTitle"
-            :video="pageVideo"
-            :youtube-link="pageYoutube"
-            :color="pageColor"
+            :is-mobile="isMobileDevice"
+            :title="page?.pageTitle"
+            :video="isMobileDevice ? page?.video.mobile : page?.video.desktop"
+            :youtube-link="page?.youtubeLink"
+            :color="page?.backgroundColor"
             @go-to="returnToHomepage"
           />
           <div class="button__arrow-left" @click="browsePage('back')">
@@ -61,17 +59,18 @@
       @trigger-banner="triggerBanner"
     />
     <div v-if="isMobileDevice" class="volume volume__mobile">
-      <!--<audio autoplay loop>
-        <source :src="require('@/assets/sounds/space.mp3')" type="audio/mpeg">
-      </audio>-->
-      <i v-if="audio.isMuted" class="fa-solid fa-volume-xmark" @click="setAudio('unmute')" />
-      <i v-else class="fa-solid fa-volume-high" @click="setAudio('mute')" />
+      <i v-if="audio.isMuted" class="fa-solid fa-volume-xmark" @click="handleAudio('triggerMute')" />
+      <i v-else class="fa-solid fa-volume-high" @click="handleAudio('triggerMute')" />
     </div>
   </div>
 </template>
 
 <script>
-import global from '../mixins/global.js'
+import { ref, onMounted, watch, useRoute, useRouter, computed } from '@nuxtjs/composition-api'
+import getAudio from '../composables/global/getAudio'
+import getAnimations from '../composables/global/getAnimations'
+import getDeviceSize from '../composables/global/getDeviceSize'
+import getData from '../composables/pages/index/getData'
 import EarthModel from '../components/EarthModel.vue'
 import PropertyCard from '../components/PropertyCard.vue'
 import BannerCover from '../components/BannerCover.vue'
@@ -82,308 +81,135 @@ export default {
     PropertyCard,
     BannerCover
   },
-  mixins: [global],
-  data () {
-    return {
-      isMobileDevice: null,
-      audio: {
-        isPlaying: false,
-        isMuted: false,
-        list: {
-          background: null,
-          home: null,
-          dive: null,
-          slide: null
-        }
-      },
-      banner: {
-        isVisible: true,
-        hasStartButton: false
-      },
-      phrases: [
-        'Climate change is REAL.',
-        'The earth is sick.',
-        'Watch it by yourself.'
-      ],
-      childPage: {
-        isVisible: false
-      },
-      properties: {
-        areVisible: false,
-        list: [
-          {
-            index: 0,
-            cardTitle: 'Temperature',
-            pageTitle: 'Temperature',
-            description: 'The total average global temperature rise since the industrial revolution is around (1.0 °C / 1.8 °F). Earth northern hemisphere is warming faster. The arctic has warmed between (2 °C / 3.6 °F) and (4 °C / 7.2 °F).',
-            link: '/temperaturepage',
-            video: {
-              desktop: 'temperature.mp4',
-              mobile: 'temperature-mobile.mp4'
-            },
-            youtubeLink: 'https://www.youtube-nocookie.com/embed/3sqdyEpklFU',
-            backgroundColor: 'rgb(253 21 27 / 40%)',
-            isOpen: false
-          },
-          {
-            index: 1,
-            cardTitle: 'CO2',
-            pageTitle: 'Carbon Dioxide',
-            description: 'For thousands of years, the natural concentration of CO2 in earth atmosphere was around 280 ppm. From the beginning of the industrial revolution, human activities like the burning of fossil fuels, deforestation, and livestock have increased this amount by more than 30%.',
-            link: '/carbondioxidepage',
-            video: {
-              desktop: 'carbondioxide.mp4',
-              mobile: 'carbondioxide-mobile.mp4'
-            },
-            youtubeLink: 'https://www.youtube-nocookie.com/embed/0oQ_l-1IdOs',
-            backgroundColor: 'rgb(255 179 15 / 40%)',
-            isOpen: false
-          },
-          {
-            index: 2,
-            cardTitle: 'Methane',
-            pageTitle: 'Methane',
-            description: '50-65% of total global methane emissions come from human activities. These include livestock, agriculture, oil and gas systems, waste from homes and businesses, landfills, and so on.',
-            link: '/methanepage',
-            video: {
-              desktop: 'methane.mp4',
-              mobile: 'methane-mobile.mp4'
-            },
-            youtubeLink: 'https://www.youtube-nocookie.com/embed/hHB47RMOi5M',
-            backgroundColor: 'rgb(132 147 36 / 40%)',
-            isOpen: false
-          },
-          {
-            index: 3,
-            cardTitle: 'N2O',
-            pageTitle: 'Nitrous Oxide',
-            description: 'Nitrous oxide is 300 times more potent than carbon dioxide and reducing it could have a faster, significant impact on global warming. The largest source of nitrous oxide is agriculture, particularly fertilized soil and animal waste, and that makes it harder to rein in.',
-            link: '/nitrousoxidepage',
-            video: {
-              desktop: 'nitrousoxide.mp4',
-              mobile: 'nitrousoxide-mobile.mp4'
-            },
-            youtubeLink: 'https://www.youtube-nocookie.com/embed/ivp3XXSnwvM',
-            backgroundColor: 'rgb(67 127 151 / 40%)',
-            isOpen: false
-          },
-          {
-            index: 4,
-            cardTitle: 'Polar Ice',
-            pageTitle: 'Polar Ice',
-            description: 'The arctic is warming around twice as fast as global average. Some of the reasons for this are: The arctic amplification, the albedo effect, and black carbon. From 1979 to 1996, we lost 2.2 – 3% of the arctic ice cover. From 2010 to present we are losing 12.85% per decade!',
-            link: '/polaricepage',
-            video: {
-              desktop: 'polarice.mp4',
-              mobile: 'polarice-mobile.mp4'
-            },
-            youtubeLink: 'https://www.youtube-nocookie.com/embed/hlVXOC6a3ME',
-            backgroundColor: 'rgb(1 41 95 / 40%)',
-            isOpen: false
-          }
-        ]
-      }
+  setup () {
+    const route = useRoute()
+    const router = useRouter()
+    const { audio, loadAudio, handleAudio, playAudio } = getAudio()
+    const { phrases, properties, page, banner, childPage } = getData()
+    const { fadeInElement, fadeOutElement, fadeOutSlideElement, scrollToTop } = getAnimations()
+    const isMobileDevice = ref(null)
+
+    const path = computed(() => { return route.value.path })
+
+    const diveIn = (event) => {
+      playAudio('dive')
+      goTo(event)
     }
-  },
-  computed: {
-    page () {
-      return this.properties.list.find((property) => {
-        return property.link === this.$route.path
+    const triggerStartButton = () => {
+      banner.value.hasStartButton = !banner.value.hasStartButton
+    }
+    const triggerBanner = async () => {
+      const bannerEl = document.getElementsByClassName('banner__cover')[0]
+      bannerEl.addEventListener('animationend', () => {
+        bannerEl.remove()
+        startIntro()
+        handleAudio('play')
       })
-    },
-    pageColor () {
-      if (!this.page) {
-        return
-      }
-      return this.page.backgroundColor
-    },
-    pageVideo () {
-      if (!this.page) {
-        return
-      }
-      return this.isMobile ? this.page.video.mobile : this.page.video.desktop
-    },
-    pageYoutube () {
-      if (!this.page) {
-        return
-      }
-      return this.page.youtubeLink
-    },
-    pageTitle () {
-      if (!this.page) {
-        return
-      }
-      return this.page.pageTitle
+      await setTimeout(() => {
+        banner.value.isVisible = !banner.value.isVisible
+      }, 1000)
     }
-  },
-  watch: {
-    async '$route.path' (newVal, oldVal) {
-      // solo lato client. lato server, il check avviene dopo l'intro
-      if (newVal === '/') {
-        await this.checkPropertiesVisibility(newVal)
-        await this.changeChildPageVisibility('out', newVal, 'fade-out')
-      } else if (newVal !== '/') {
-        await this.checkPropertiesVisibility(newVal)
-        await this.changeChildPageVisibility('in', newVal, 'fade-in')
-      }
-    }
-  },
-  mounted () {
-    this.isMobileDevice = this.isMobile
-    this.audio.list.background = new Audio(require('@/assets/sounds/space.mp3'))
-    this.audio.list.home = new Audio(require('@/assets/sounds/home.wav'))
-    this.audio.list.dive = new Audio(require('@/assets/sounds/dive.wav'))
-    this.audio.list.slide = new Audio(require('@/assets/sounds/slide.wav'))
-  },
-  methods: {
-    skipIntro () {
-      this.playAudio('home')
-      this.endIntro()
-    },
-    diveIn (event) {
-      this.playAudio('dive')
-      this.goTo(event)
-    },
-    triggerStartButton () {
-      this.banner.hasStartButton = !this.banner.hasStartButton
-    },
-    setAudio (action) {
-      if (action === 'play') {
-        this.audio.list.background.loop = true
-        this.audio.list.background.play()
-        this.audio.isPlaying = true
-      } else if (action === 'unmute') {
-        this.audio.list.background.muted = false
-        this.audio.isMuted = false
-      } else if (action === 'mute') {
-        this.audio.list.background.muted = true
-        this.audio.isMuted = true
-      }
-    },
-    playAudio (type) {
-      if (this.audio.isMuted) {
-        return
-      }
-      this.audio.list[type].play()
-    },
-    async browsePage (action) {
-      const nextPage = this.properties.list[this.page.index + 1] || this.properties.list[0]
-      const backPage = this.properties.list[this.page.index - 1] || this.properties.list[4]
-      this.playAudio('slide')
-      if (action === 'next') {
-        await this.changeChildPageVisibility('out', nextPage.link, 'right')
-        this.goTo(nextPage.link)
-      } else if (action === 'back') {
-        await this.changeChildPageVisibility('out', backPage.link, 'left')
-        this.goTo(backPage.link)
-      }
-      await this.scrollToTop()
-    },
-    scrollToTop () {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      })
-    },
-    async returnToHomepage () {
-      this.playAudio('home')
-      this.scrollToTop()
-      await this.changeChildPageVisibility('out', '/', null)
-      this.goTo('/')
-    },
-    async checkPropertiesVisibility (path) {
-      const properties = document.getElementsByClassName('properties__container')[0]
+    const checkPropertiesVisibility = async (path) => {
+      const propertiesEl = document.getElementsByClassName('properties__container')[0]
       if (path === '/') {
-        this.properties.areVisible = true
-      } else if (properties) {
-        await this.fadeOutElement(properties)
-        this.properties.areVisible = false
+        properties.value.areVisible = true
+      } else if (propertiesEl) {
+        await fadeOutElement(propertiesEl)
+        properties.value.areVisible = false
       }
-    },
-    async changeChildPageVisibility (action, path, animationDirection) {
+    }
+    const changeChildPageVisibility = async (action, path, animationDirection) => {
       const childEl = document.getElementsByClassName('child-page')[0] || null
       if ((action === 'out' || path === '/') && childEl !== null) {
         (animationDirection === 'right' || animationDirection === 'left')
-          ? await this.fadeOutSlideElement(childEl, animationDirection)
-          : await this.fadeOutElement(childEl)
-        await this.triggerChildPageVisibility(false)
+          ? await fadeOutSlideElement(childEl, animationDirection)
+          : await fadeOutElement(childEl)
+        await triggerChildPageVisibility(false)
       } else if ((action === 'in' || path !== '/')) {
-        await this.triggerChildPageVisibility(true)
+        await triggerChildPageVisibility(true)
       }
-    },
-    triggerChildPageVisibility (bool) {
-      this.childPage.isVisible = bool
-    },
-    async goTo (event) {
-      await this.checkPropertiesVisibility(event)
-      this.$router.push({ path: event })
-    },
-    async triggerBanner () {
-      const banner = document.getElementsByClassName('banner__cover')[0]
-      banner.addEventListener('animationend', () => {
-        banner.remove()
-        this.startIntro()
-        this.setAudio('play')
-      })
-      await setTimeout(() => {
-        this.banner.isVisible = !this.banner.isVisible
-      }, 1000)
-    },
-    async startIntro () {
+    }
+    const triggerChildPageVisibility = (bool) => {
+      childPage.value.isVisible = bool
+    }
+    const goTo = async (event) => {
+      await checkPropertiesVisibility(event)
+      router.push({ path: event })
+    }
+    const returnToHomepage = async () => {
+      playAudio('home')
+      scrollToTop()
+      await changeChildPageVisibility('out', '/', null)
+      goTo('/')
+    }
+    const browsePage = async (action) => {
+      const nextPage = properties.value.list[page.value.index + 1] || properties.value.list[0]
+      const backPage = properties.value.list[page.value.index - 1] || properties.value.list[4]
+      playAudio('slide')
+      if (action === 'next') {
+        await changeChildPageVisibility('out', nextPage.link, 'right')
+        goTo(nextPage.link)
+      } else if (action === 'back') {
+        await changeChildPageVisibility('out', backPage.link, 'left')
+        goTo(backPage.link)
+      }
+      await scrollToTop()
+    }
+    const startIntro = async () => {
       const p = document.getElementsByClassName('heading__text')[0]
-      await this.fadeInElement(p, this.phrases[0])
-      await this.fadeOutElement(p)
-      await this.fadeInElement(p, this.phrases[1])
-      await this.fadeOutElement(p)
-      await this.fadeInElement(p, this.phrases[2])
-      await this.fadeOutElement(p)
-      this.endIntro()
-    },
-    async endIntro () {
+      await fadeInElement(p, phrases[0])
+      await fadeOutElement(p)
+      await fadeInElement(p, phrases[1])
+      await fadeOutElement(p)
+      await fadeInElement(p, phrases[2])
+      await fadeOutElement(p)
+      endIntro()
+    }
+    const endIntro = async () => {
       const p = document.getElementsByClassName('heading__text')[0]
       const skip = document.getElementsByClassName('skip-button')[0]
       p.remove()
       skip.remove()
-      await this.checkPropertiesVisibility(this.$route.path)
-      await this.changeChildPageVisibility(null, this.$route.path, null)
-    },
-    fadeInElement (el, content) {
-      return new Promise((resolve, reject) => {
-        el.addEventListener('animationend', () => {
-          return resolve()
-        })
-        if (content) {
-          el.innerHTML = content
-        }
-        this.setClass(el, 'fade-in', 'fade-out')
-      })
-    },
-    fadeOutElement (el) {
-      return new Promise((resolve, reject) => {
-        el.addEventListener('animationend', () => {
-          return resolve()
-        })
-        this.setClass(el, 'fade-out', 'fade-in')
-      })
-    },
-    fadeOutSlideElement (el, direction) {
-      return new Promise((resolve, reject) => {
-        el.addEventListener('animationend', () => {
-          return resolve()
-        })
-        this.setClass(el, 'fade-out-slide-' + direction, 'fade-out-slide-' + direction)
-      })
-    },
-    setClass (el, classToAdd, classToDelete) {
-      if (classToDelete.length) {
-        this.delClass(el, classToDelete)
+      await checkPropertiesVisibility(route.value.path)
+      await changeChildPageVisibility(null, route.value.path, null)
+    }
+    const skipIntro = () => {
+      playAudio('home')
+      endIntro()
+    }
+
+    onMounted(() => {
+      loadAudio()
+      isMobileDevice.value = getDeviceSize().isMobile
+    })
+
+    watch(path, async (newVal, oldVal) => {
+      if (newVal === '/') {
+        await checkPropertiesVisibility(newVal)
+        await changeChildPageVisibility('out', newVal, 'fade-out')
+      } else if (newVal !== '/') {
+        await checkPropertiesVisibility(newVal)
+        await changeChildPageVisibility('in', newVal, 'fade-in')
       }
-      return el.classList.add(classToAdd)
-    },
-    delClass (el, classToDelete) {
-      if (el.classList.contains(classToDelete)) {
-        el.classList.toggle(classToDelete)
-      }
+    })
+
+    return {
+      audio,
+      loadAudio,
+      handleAudio,
+      playAudio,
+      isMobileDevice,
+      phrases,
+      properties,
+      page,
+      banner,
+      childPage,
+      diveIn,
+      skipIntro,
+      browsePage,
+      returnToHomepage,
+      triggerBanner,
+      triggerStartButton
     }
   }
 }

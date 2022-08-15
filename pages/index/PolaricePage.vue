@@ -30,7 +30,10 @@
 </template>
 
 <script>
-import global from '../../mixins/global.js'
+import { ref, useFetch, watch } from '@nuxtjs/composition-api'
+import getChartFunctions from '../../composables/chartjs/getChartFunctions'
+import getConverters from '../../composables/global/getConverters'
+import getData from '../../composables/pages/index/polarice/getData'
 import Service from '../../services/Service'
 import VideoHeader from '../../components/VideoHeader'
 import LineChart from '../../components/LineChart'
@@ -42,8 +45,11 @@ export default {
     LineChart,
     YoutubeVideo
   },
-  mixins: [global],
   props: {
+    isMobile: {
+      type: Boolean,
+      default: null
+    },
     title: {
       type: String,
       default: null
@@ -61,122 +67,16 @@ export default {
       default: null
     }
   },
-  data () {
-    return {
-      polariceData: null,
-      chartId: 'line-chart',
-      datasetIdKey: 'label',
-      width: 400,
-      height: 400,
-      cssClasses: '',
-      filters: {
-        year: [1, 3, 5, 'all']
-      },
-      styles: () => {},
-      plugins: () => {},
-      chartData: null,
-      chartOptions: {
-        responsive: true
-      },
-      settings: {
-        lineChart: {
-          type: 'line',
-          data: null,
-          options: {
-            animation: false,
-            parsing: false,
-            layout: {
-              padding: 20
-            },
-            scales: {
-              x: {
-                type: 'time',
-                time: {
-                  unit: 'month'
-                }
-              },
-              y: {
-                type: 'linear',
-                min: 0,
-                max: 10,
-                title: {
-                  display: true,
-                  text: 'Square kilometer (km2)',
-                  font: {
-                    size: 16
-                  }
-                }
-              }
-            },
-            interaction: {
-              mode: 'nearest',
-              axis: 'x',
-              intersect: false
-            },
-            plugins: {
-              legend: {
-                position: 'bottom',
-                labels: {
-                  font: {
-                    size: 20,
-                    family: "'Raleway', 'sans-serif'"
-                  }
-                }
-              },
-              tooltip: {
-                enabled: false,
-                backgroundColor: 'yellow'
-              },
-              title: {
-                display: true,
-                text: 'Arctic marine surface extension',
-                font: {
-                  size: 20,
-                  family: "'Raleway', 'sans-serif'",
-                  color: '#000000'
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  async fetch () {
-    let res
-    try {
-      res = await Service.getArctic()
-      this.polariceData = this.formatTime(res.data.arcticData, 'splittedData', ['year', 'month'])
-      this.polariceData = this.removeNoise(this.polariceData, 'data-type', 'NRTSI-G')
-    } catch (e) {
-      res = { data: 'Something went wrong with the request. Please try again later' }
-    }
-  },
-  watch: {
-    polariceData (newVal) {
-      if (!newVal) {
-        return
-      }
-      this.getChartData()
-      this.updateMinY(this.settings, this.polariceData, ['extent'], 1, 9999, 'y')
-      this.updateMaxY(this.settings, this.polariceData, ['extent'], 1, 0, 'y')
-      this.updateChartData(this.settings, 'lineChart', this.chartData)
-    }
-  },
-  methods: {
-    removeNoise (data, key, value) {
+  setup () {
+    const { formatTime } = getConverters()
+    const { updateChartData, updateMaxY, updateMinY, parseData } = getChartFunctions()
+    const { polariceData, chartData, filters, settings } = getData()
+    const removeNoise = (data, key, value) => {
       return data.filter((a) => { return a[key] !== value })
-    },
-    parseData (xValue, yValue) {
-      return this.polariceData.map((r) => {
-        return {
-          x: r[xValue], y: r[yValue]
-        }
-      })
-    },
-    getChartData () {
-      this.chartData = {
-        labels: this.polariceData.map((r) => { return r.time }),
+    }
+    const getChartData = () => {
+      chartData.value = {
+        labels: polariceData.value.map((r) => { return r.time }),
         datasets: [
           {
             label: 'Arctic extension',
@@ -185,10 +85,46 @@ export default {
             borderWidth: 1,
             radius: 0,
             showLine: true,
-            data: this.parseData('time', 'extent')
+            data: parseData(polariceData.value, 'time', 'extent')
           }
         ]
       }
+    }
+
+    const res = ref(null)
+    const { fetch } = useFetch(async () => {
+      try {
+        res.value = await Service.getArctic()
+        polariceData.value = formatTime(res.value.data.arcticData, 'splittedData', ['year', 'month'])
+        polariceData.value = removeNoise(polariceData.value, 'data-type', 'NRTSI-G')
+      } catch (e) {
+        res.value = { data: 'Something went wrong with the request. Please try again later' }
+      }
+    })
+
+    fetch()
+
+    watch(polariceData, (newVal, oldVal) => {
+      if (!newVal) {
+        return
+      }
+      getChartData()
+      updateMinY(settings.value, polariceData.value, ['extent'], 1, 9999, 'y')
+      updateMaxY(settings.value, polariceData.value, ['extent'], 1, 0, 'y')
+      updateChartData(settings.value, 'lineChart', chartData.value)
+    })
+
+    return {
+      formatTime,
+      updateChartData,
+      updateMaxY,
+      updateMinY,
+      getChartData,
+      parseData,
+      polariceData,
+      chartData,
+      filters,
+      settings
     }
   }
 }

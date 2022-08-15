@@ -30,7 +30,10 @@
 </template>
 
 <script>
-import global from '../../mixins/global.js'
+import { ref, useFetch, watch } from '@nuxtjs/composition-api'
+import getChartFunctions from '../../composables/chartjs/getChartFunctions'
+import getConverters from '../../composables/global/getConverters'
+import getData from '../../composables/pages/index/carbondioxide/getData'
 import Service from '../../services/Service'
 import VideoHeader from '../../components/VideoHeader'
 import LineChart from '../../components/LineChart'
@@ -42,8 +45,11 @@ export default {
     LineChart,
     YoutubeVideo
   },
-  mixins: [global],
   props: {
+    isMobile: {
+      type: Boolean,
+      default: null
+    },
     title: {
       type: String,
       default: null
@@ -61,118 +67,13 @@ export default {
       default: null
     }
   },
-  data () {
-    return {
-      carbondioxideData: null,
-      chartId: 'line-chart',
-      datasetIdKey: 'label',
-      width: 400,
-      height: 400,
-      cssClasses: '',
-      filters: {
-        year: [1, 3, 5, 'all']
-      },
-      styles: () => {},
-      plugins: () => {},
-      chartData: null,
-      chartOptions: {
-        responsive: true
-      },
-      settings: {
-        lineChart: {
-          type: 'line',
-          data: null,
-          options: {
-            animation: false,
-            parsing: false,
-            layout: {
-              padding: 20
-            },
-            scales: {
-              x: {
-                type: 'time',
-                time: {
-                  unit: 'month'
-                }
-              },
-              y: {
-                type: 'linear',
-                min: null,
-                max: null,
-                title: {
-                  display: true,
-                  text: 'Parts per million (ppm)',
-                  font: {
-                    size: 16
-                  }
-                }
-              }
-            },
-            interaction: {
-              mode: 'nearest',
-              axis: 'x',
-              intersect: false
-            },
-            plugins: {
-              legend: {
-                position: 'bottom',
-                labels: {
-                  font: {
-                    size: 20,
-                    family: "'Raleway', 'sans-serif'"
-                  }
-                }
-              },
-              tooltip: {
-                enabled: false,
-                backgroundColor: 'yellow'
-              },
-              title: {
-                display: true,
-                text: 'CO2 in the atmosphere',
-                font: {
-                  size: 20,
-                  family: "'Raleway', 'sans-serif'",
-                  color: '#000000'
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  async fetch () {
-    let res
-    try {
-      res = await Service.getCarbonDioxide()
-      this.carbondioxideData = this.formatTime(res.data.co2, 'splittedData', ['year', 'month', 'day'])
-    } catch (e) {
-      res = { data: 'Something went wrong with the request. Please try again later' }
-    }
-  },
-  watch: {
-    carbondioxideData (newVal) {
-      if (!newVal) {
-        return
-      }
-      this.getChartData()
-      this.updateMinY(this.settings, this.carbondioxideData, ['cycle', 'trend'], 5, 9999, 'y')
-      this.updateMaxY(this.settings, this.carbondioxideData, ['cycle', 'trend'], 5, 0, 'y')
-      this.updateChartData(this.settings, 'lineChart', this.chartData)
-    }
-  },
-  methods: {
-    parseData (xValue, yValue) {
-      return this.carbondioxideData.map((r) => {
-        return {
-          x: r[xValue], y: r[yValue]
-        }
-      })
-    },
-    getChartData () {
-      this.chartData = {
-        labels: this.carbondioxideData.map((r) => { return r.time }),
+  setup () {
+    const { formatTime } = getConverters()
+    const { updateChartData, updateMaxY, updateMinY, parseData } = getChartFunctions()
+    const { carbondioxideData, chartData, filters, settings } = getData()
+    const getChartData = () => {
+      chartData.value = {
+        labels: carbondioxideData.value.map((r) => { return r.time }),
         datasets: [
           {
             label: 'CO2 cycle',
@@ -181,7 +82,7 @@ export default {
             borderWidth: 1,
             radius: 0,
             showLine: true,
-            data: this.parseData('time', 'cycle')
+            data: parseData(carbondioxideData.value, 'time', 'cycle')
           }, {
             label: 'Average increment',
             borderColor: '#000000',
@@ -191,10 +92,45 @@ export default {
             borderWidth: 1,
             radius: 0,
             showLine: true,
-            data: this.parseData('time', 'trend')
+            data: parseData(carbondioxideData.value, 'time', 'trend')
           }
         ]
       }
+    }
+    const res = ref(null)
+
+    const { fetch } = useFetch(async () => {
+      try {
+        res.value = await Service.getCarbonDioxide()
+        carbondioxideData.value = formatTime(res.value.data.co2, 'splittedData', ['year', 'month', 'day'])
+      } catch (e) {
+        res.value = { data: 'Something went wrong with the request. Please try again later' }
+      }
+    })
+
+    fetch()
+
+    watch(carbondioxideData, (newVal, oldVal) => {
+      if (!newVal) {
+        return
+      }
+      getChartData()
+      updateMinY(settings.value, carbondioxideData.value, ['cycle', 'trend'], 5, 9999, 'y')
+      updateMaxY(settings.value, carbondioxideData.value, ['cycle', 'trend'], 5, 0, 'y')
+      updateChartData(settings.value, 'lineChart', chartData.value)
+    })
+
+    return {
+      formatTime,
+      updateChartData,
+      updateMaxY,
+      updateMinY,
+      getChartData,
+      parseData,
+      carbondioxideData,
+      chartData,
+      filters,
+      settings
     }
   }
 }

@@ -32,7 +32,10 @@
 </template>
 
 <script>
-import global from '../../mixins/global.js'
+import { ref, useFetch, watch } from '@nuxtjs/composition-api'
+import getChartFunctions from '../../composables/chartjs/getChartFunctions'
+import getConverters from '../../composables/global/getConverters'
+import getData from '../../composables/pages/index/methane/getData'
 import Service from '../../services/Service'
 import VideoHeader from '../../components/VideoHeader'
 import LineChart from '../../components/LineChart'
@@ -44,8 +47,11 @@ export default {
     LineChart,
     YoutubeVideo
   },
-  mixins: [global],
   props: {
+    isMobile: {
+      type: Boolean,
+      default: null
+    },
     title: {
       type: String,
       default: null
@@ -63,132 +69,13 @@ export default {
       default: null
     }
   },
-  data () {
-    return {
-      methaneData: null,
-      chartId: 'line-chart',
-      datasetIdKey: 'label',
-      width: 400,
-      height: 400,
-      cssClasses: '',
-      filters: {
-        year: [1, 3, 5, 'all']
-      },
-      styles: () => {},
-      plugins: () => {},
-      chartData: null,
-      chartOptions: {
-        responsive: true
-      },
-      settings: {
-        lineChart: {
-          type: 'line',
-          data: null,
-          options: {
-            animation: false,
-            parsing: false,
-            layout: {
-              padding: 20
-            },
-            scales: {
-              x: {
-                type: 'time',
-                time: {
-                  unit: 'month'
-                }
-              },
-              y: {
-                type: 'linear',
-                min: null,
-                max: null,
-                position: 'left',
-                display: true,
-                title: {
-                  display: true,
-                  text: 'Parts per million (ppm)',
-                  font: {
-                    size: 16
-                  }
-                }
-              },
-              y1: {
-                type: 'linear',
-                min: null,
-                max: null,
-                position: 'right',
-                display: false,
-                grid: {
-                  drawOnChartArea: false
-                }
-              }
-            },
-            interaction: {
-              mode: 'nearest',
-              axis: 'x',
-              intersect: false
-            },
-            plugins: {
-              legend: {
-                position: 'bottom',
-                labels: {
-                  font: {
-                    size: 20,
-                    family: "'Raleway', 'sans-serif'"
-                  }
-                }
-              },
-              tooltip: {
-                enabled: false,
-                backgroundColor: 'yellow'
-              },
-              title: {
-                display: true,
-                text: 'Methane in the atmosphere',
-                font: {
-                  size: 20,
-                  family: "'Raleway', 'sans-serif'",
-                  color: '#000000'
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  async fetch () {
-    let res
-    try {
-      res = await Service.getMethane()
-      this.methaneData = this.formatTime(res.data.methane, 'number', ['date'])
-    } catch (e) {
-      res = { data: 'Something went wrong with the request. Please try again later' }
-    }
-  },
-  watch: {
-    methaneData (newVal) {
-      if (!newVal) {
-        return
-      }
-      this.getChartData()
-      this.updateMinY(this.settings, this.methaneData, ['average', 'trend'], 30, 99999, 'y')
-      this.updateMaxY(this.settings, this.methaneData, ['average', 'trend'], 30, 0, 'y')
-      this.updateMinY(this.settings, this.methaneData, ['trendUnc'], 3, 99999, 'y1')
-      this.updateMaxY(this.settings, this.methaneData, ['trendUnc'], 3, -1000, 'y1')
-      this.updateChartData(this.settings, 'lineChart', this.chartData)
-    }
-  },
-  methods: {
-    parseData (xValue, yValue) {
-      return this.methaneData.map((r) => {
-        return {
-          x: r[xValue], y: r[yValue]
-        }
-      })
-    },
-    getChartData () {
-      this.chartData = {
-        labels: this.methaneData.map((r) => { return r.time }),
+  setup () {
+    const { formatTime } = getConverters()
+    const { updateChartData, updateMaxY, updateMinY, parseData } = getChartFunctions()
+    const { methaneData, chartData, filters, settings } = getData()
+    const getChartData = () => {
+      chartData.value = {
+        labels: methaneData.value.map((r) => { return r.time }),
         datasets: [
           {
             label: 'Methane concentration',
@@ -197,7 +84,7 @@ export default {
             borderWidth: 1,
             radius: 0,
             showLine: true,
-            data: this.parseData('time', 'average'),
+            data: parseData(methaneData.value, 'time', 'average'),
             yAxisID: 'y'
           }, {
             label: 'Average increment',
@@ -208,7 +95,7 @@ export default {
             borderWidth: 1,
             radius: 0,
             showLine: true,
-            data: this.parseData('time', 'trend'),
+            data: parseData(methaneData.value, 'time', 'trend'),
             yAxisID: 'y'
           }/* , {
             label: 'Methane emissions',
@@ -225,6 +112,43 @@ export default {
 
         ]
       }
+    }
+
+    const res = ref(null)
+    const { fetch } = useFetch(async () => {
+      try {
+        res.value = await Service.getMethane()
+        methaneData.value = formatTime(res.value.data.methane, 'number', ['date'])
+      } catch (e) {
+        res.value = { data: 'Something went wrong with the request. Please try again later' }
+      }
+    })
+
+    fetch()
+
+    watch(methaneData, (newVal, oldVal) => {
+      if (!newVal) {
+        return
+      }
+      getChartData()
+      updateMinY(settings.value, methaneData.value, ['average', 'trend'], 30, 99999, 'y')
+      updateMaxY(settings.value, methaneData.value, ['average', 'trend'], 30, 0, 'y')
+      updateMinY(settings.value, methaneData.value, ['trendUnc'], 3, 99999, 'y1')
+      updateMaxY(settings.value, methaneData.value, ['trendUnc'], 3, -1000, 'y1')
+      updateChartData(settings.value, 'lineChart', chartData.value)
+    })
+
+    return {
+      formatTime,
+      updateChartData,
+      updateMaxY,
+      updateMinY,
+      getChartData,
+      parseData,
+      methaneData,
+      chartData,
+      filters,
+      settings
     }
   }
 }

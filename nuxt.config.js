@@ -45,7 +45,8 @@ export default {
     '@nuxtjs/eslint-module',
     '@nuxtjs/google-fonts',
     '@nuxt/typescript-build',
-    '@nuxtjs/dotenv'
+    '@nuxtjs/dotenv',
+    '@nuxtjs/composition-api/module'
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules

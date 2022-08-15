@@ -30,7 +30,10 @@
 </template>
 
 <script>
-import global from '../../mixins/global.js'
+import { ref, useFetch, watch } from '@nuxtjs/composition-api'
+import getChartFunctions from '../../composables/chartjs/getChartFunctions'
+import getConverters from '../../composables/global/getConverters'
+import getData from '../../composables/pages/index/temperature/getData'
 import Service from '../../services/Service'
 import VideoHeader from '../../components/VideoHeader'
 import LineChart from '../../components/LineChart'
@@ -42,8 +45,11 @@ export default {
     LineChart,
     YoutubeVideo
   },
-  mixins: [global],
   props: {
+    isMobile: {
+      type: Boolean,
+      default: null
+    },
     title: {
       type: String,
       default: null
@@ -61,139 +67,69 @@ export default {
       default: null
     }
   },
-  data () {
-    return {
-      temperatureData: null,
-      chartId: 'line-chart',
-      datasetIdKey: 'label',
-      width: 400,
-      height: 400,
-      cssClasses: '',
-      filters: {
-        year: [1, 3, 5, 'all']
-      },
-      styles: () => {},
-      plugins: () => {},
-      chartData: null,
-      chartOptions: {
-        responsive: true
-      },
-      settings: {
-        lineChart: {
-          type: 'line',
-          data: null,
-          options: {
-            animation: false,
-            parsing: false,
-            layout: {
-              padding: 20
-            },
-            scales: {
-              x: {
-                type: 'time',
-                time: {
-                  unit: 'month'
-                }
-              },
-              y: {
-                type: 'linear',
-                min: null,
-                max: null,
-                title: {
-                  display: true,
-                  text: 'Temperature (°C)',
-                  font: {
-                    size: 16
-                  }
-                }
-              }
-            },
-            interaction: {
-              mode: 'nearest',
-              axis: 'x',
-              intersect: false
-            },
-            plugins: {
-              legend: {
-                position: 'bottom',
-                labels: {
-                  font: {
-                    size: 20,
-                    family: "'Raleway', 'sans-serif'"
-                  }
-                }
-              },
-              tooltip: {
-                enabled: false,
-                backgroundColor: 'yellow'
-              },
-              title: {
-                display: true,
-                text: 'Global surface temperature change',
-                font: {
-                  size: 20,
-                  family: "'Raleway', 'sans-serif'",
-                  color: '#000000'
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  async fetch () {
-    let res
-    try {
-      res = await Service.getTemperature()
-      this.temperatureData = this.formatTime(res.data.result, 'number', ['time'])
-    } catch (e) {
-      res = { data: 'Something went wrong with the request. Please try again later' }
-    }
-  },
-  watch: {
-    temperatureData (newVal) {
-      if (!newVal) {
-        return
-      }
-      this.getChartData()
-      this.updateMinY(this.settings, this.temperatureData, ['land', 'station'], 0.3, 9999, 'y')
-      this.updateMaxY(this.settings, this.temperatureData, ['land', 'station'], 0.3, 0, 'y')
-      this.updateChartData(this.settings, 'lineChart', this.chartData)
-    }
-  },
-  methods: {
-    parseData (xValue, yValue) {
-      return this.temperatureData.map((r) => {
-        return {
-          x: r[xValue], y: r[yValue]
-        }
-      })
-    },
-    getChartData () {
-      this.chartData = {
-        labels: this.temperatureData.map((r) => { return r.time }),
+  setup (props) {
+    const { formatTime } = getConverters()
+    const { updateChartData, updateMaxY, updateMinY, parseData } = getChartFunctions()
+    const { temperatureData, chartData, filters, settings } = getData()
+    const getChartData = () => {
+      chartData.value = {
+        labels: temperatureData.value.map((r) => { return r.time }),
         datasets: [
           {
             label: 'Measured from land',
             borderColor: '#a32525',
             backgroundColor: 'transparent',
             borderWidth: 1,
-            radius: this.isMobile ? 0 : 2,
-            showLine: this.isMobile,
-            data: this.parseData('time', 'land')
+            radius: props.isMobile ? 0 : 2,
+            showLine: props.isMobile,
+            data: parseData(temperatureData.value, 'time', 'land')
           },
           {
             label: 'Measured from space station',
             borderColor: 'yellow',
             backgroundColor: 'transparent',
             borderWidth: 1,
-            radius: this.isMobile ? 0 : 2,
-            showLine: this.isMobile,
-            data: this.parseData('time', 'station')
+            radius: props.isMobile ? 0 : 2,
+            showLine: props.isMobile,
+            data: parseData(temperatureData.value, 'time', 'station')
           }
         ]
       }
+    }
+
+    const res = ref(null)
+    const { fetch } = useFetch(async () => {
+      try {
+        res.value = await Service.getTemperature()
+        temperatureData.value = formatTime(res.value.data.result, 'number', ['time'])
+      } catch (e) {
+        res.value = { data: 'Something went wrong with the request. Please try again later' }
+      }
+    })
+
+    fetch()
+
+    watch(temperatureData, (newVal, oldVal) => {
+      if (!newVal) {
+        return
+      }
+      getChartData()
+      updateMinY(settings.value, temperatureData.value, ['land', 'station'], 0.3, 9999, 'y')
+      updateMaxY(settings.value, temperatureData.value, ['land', 'station'], 0.3, 0, 'y')
+      updateChartData(settings.value, 'lineChart', chartData.value)
+    })
+
+    return {
+      formatTime,
+      updateChartData,
+      updateMaxY,
+      updateMinY,
+      getChartData,
+      parseData,
+      temperatureData,
+      chartData,
+      filters,
+      settings
     }
   }
 }
