@@ -1,11 +1,35 @@
 import { ref } from '@nuxtjs/composition-api'
 
-const getData = () => {
-  const carbondioxideData = ref(null)
-  const chartData = ref(null)
+const chartConfig = () => {
+  const lineChartDataConfig = {
+    labels: null,
+    datasets: [
+      {
+        label: 'Arctic extension',
+        borderColor: 'rgb(56, 47, 202)',
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        radius: 0,
+        showLine: true,
+        data: null
+      }
+    ]
+  }
+  const lineChartMobileConfig = null
+  const lineFieldsToParse = [
+    {
+      x: ['time'],
+      y: ['extent']
+    }
+  ]
   const filters = ref({
     selected: 'all',
-    year: [1, 3, 5, 'all']
+    years: [
+      { label: '10 YEARS', value: 10 },
+      { label: '20 YEARS', value: 20 },
+      { label: '30 YEARS', value: 30 },
+      { label: 'ALL', value: 'all' }
+    ]
   })
   const settings = ref({
     lineChart: {
@@ -26,11 +50,11 @@ const getData = () => {
           },
           y: {
             type: 'linear',
-            min: null,
-            max: null,
+            min: 0,
+            max: 10,
             title: {
               display: true,
-              text: 'Parts per million (ppm)',
+              text: 'Square kilometer (km2)',
               font: {
                 size: 16
               }
@@ -58,7 +82,7 @@ const getData = () => {
           },
           title: {
             display: true,
-            text: 'CO2 in the atmosphere',
+            text: 'Arctic marine surface extension',
             font: {
               size: 20,
               family: "'Raleway', 'sans-serif'",
@@ -71,11 +95,12 @@ const getData = () => {
   })
 
   return {
-    carbondioxideData,
-    chartData,
+    lineChartDataConfig,
+    lineChartMobileConfig,
+    lineFieldsToParse,
     filters,
     settings
   }
 }
 
-export default getData
+export default chartConfig

@@ -3,19 +3,26 @@
     <h1 class="banner__header pulsate">
       iEarth
     </h1>
-    <p
-      class="banner__button"
-      :class="{ 'fade-in' : hasStartButton, 'invisible': !hasStartButton }"
-      @click="$emit('trigger-banner')"
-    >
-      Start
-    </p>
+    <div class="banner__loading">
+      <SpinnerLoader v-if="!hasStartButton" class="banner_button" />
+      <p
+        class="banner__button"
+        :class="{ 'fade-in' : hasStartButton, 'invisible': !hasStartButton }"
+        @click="$emit('trigger-banner')"
+      >
+        Start
+      </p>
+    </div>
   </div>
 </template>
 
 <script>
+import SpinnerLoader from './SpinnerLoader'
 export default {
   name: 'BannerCover',
+  components: {
+    SpinnerLoader
+  },
   props: {
     isVisible: {
       type: Boolean,

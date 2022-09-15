@@ -1,11 +1,51 @@
 import { ref } from '@nuxtjs/composition-api'
 
-const getData = () => {
-  const methaneData = ref(null)
-  const chartData = ref(null)
+const chartConfig = () => {
+  const lineChartDataConfig = {
+    labels: null,
+    datasets: [
+      {
+        label: 'Nitrous Oxide concentration',
+        borderColor: 'rgb(56, 47, 202)',
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        radius: 0,
+        showLine: true,
+        data: null,
+        yAxisID: 'y'
+      }, {
+        label: 'Average increment',
+        borderColor: '#000000',
+        backgroundColor: 'transparent',
+        fill: false,
+        borderDash: [6],
+        borderWidth: 1,
+        radius: 0,
+        showLine: true,
+        data: null,
+        yAxisID: 'y'
+      }
+    ]
+  }
+  const lineChartMobileConfig = null
+  const lineFieldsToParse = [
+    {
+      x: ['time'],
+      y: ['average']
+    },
+    {
+      x: ['time'],
+      y: ['trend']
+    }
+  ]
   const filters = ref({
     selected: 'all',
-    year: [1, 3, 5, 'all']
+    years: [
+      { label: '5 YEARS', value: 5 },
+      { label: '10 YEARS', value: 10 },
+      { label: '15 YEARS', value: 15 },
+      { label: 'ALL', value: 'all' }
+    ]
   })
   const settings = ref({
     lineChart: {
@@ -70,7 +110,7 @@ const getData = () => {
           },
           title: {
             display: true,
-            text: 'Methane in the atmosphere',
+            text: 'Nitrous Oxide in the atmosphere',
             font: {
               size: 20,
               family: "'Raleway', 'sans-serif'",
@@ -83,11 +123,12 @@ const getData = () => {
   })
 
   return {
-    methaneData,
-    chartData,
+    lineChartDataConfig,
+    lineChartMobileConfig,
+    lineFieldsToParse,
     filters,
     settings
   }
 }
 
-export default getData
+export default chartConfig

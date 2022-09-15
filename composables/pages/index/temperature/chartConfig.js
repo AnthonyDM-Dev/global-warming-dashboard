@@ -1,11 +1,57 @@
 import { ref } from '@nuxtjs/composition-api'
 
-const getData = () => {
-  const polariceData = ref(null)
-  const chartData = ref(null)
+const chartConfig = () => {
+  const lineChartDataConfig = {
+    labels: null,
+    datasets: [
+      {
+        label: 'Measured from land',
+        borderColor: '#a32525',
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        radius: 2,
+        showLine: false,
+        data: null
+      },
+      {
+        label: 'Measured from space station',
+        borderColor: 'yellow',
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        radius: 2,
+        showLine: false,
+        data: null
+      }
+    ]
+  }
+  const lineChartMobileConfig = [
+    {
+      radius: 0,
+      showLine: true
+    },
+    {
+      radius: 0,
+      showLine: true
+    }
+  ]
+  const lineFieldsToParse = [
+    {
+      x: ['time'],
+      y: ['land']
+    },
+    {
+      x: ['time'],
+      y: ['station']
+    }
+  ]
   const filters = ref({
     selected: 'all',
-    year: [1, 3, 5, 'all']
+    years: [
+      { label: '15 YEARS', value: 15 },
+      { label: '30 YEARS', value: 30 },
+      { label: '50 YEARS', value: 50 },
+      { label: 'ALL', value: 'all' }
+    ]
   })
   const settings = ref({
     lineChart: {
@@ -26,11 +72,11 @@ const getData = () => {
           },
           y: {
             type: 'linear',
-            min: 0,
-            max: 10,
+            min: null,
+            max: null,
             title: {
               display: true,
-              text: 'Square kilometer (km2)',
+              text: 'Temperature (°C)',
               font: {
                 size: 16
               }
@@ -58,7 +104,7 @@ const getData = () => {
           },
           title: {
             display: true,
-            text: 'Arctic marine surface extension',
+            text: 'Global surface temperature change',
             font: {
               size: 20,
               family: "'Raleway', 'sans-serif'",
@@ -71,11 +117,12 @@ const getData = () => {
   })
 
   return {
-    polariceData,
-    chartData,
+    lineChartDataConfig,
+    lineChartMobileConfig,
+    lineFieldsToParse,
     filters,
     settings
   }
 }
 
-export default getData
+export default chartConfig

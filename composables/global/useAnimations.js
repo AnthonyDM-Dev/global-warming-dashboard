@@ -1,4 +1,4 @@
-const getAnimations = () => {
+const useAnimations = () => {
   const fadeInElement = (el, content) => {
     return new Promise((resolve, reject) => {
       el.addEventListener('animationend', () => {
@@ -59,4 +59,4 @@ const getAnimations = () => {
   }
 }
 
-export default getAnimations
+export default useAnimations

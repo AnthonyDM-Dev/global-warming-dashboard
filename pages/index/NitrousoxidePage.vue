@@ -5,45 +5,50 @@
       :video="video"
       :title="title"
     />
-    <div class="description">
-      <p>Nitrous oxide is a by-product of biological activity of a symbiotic bacteria living in leguminous plant roots. This is a principal greenhouse gas that absorbs in the infrared wavelength region and unfortunately falls in an IR 'window' between IR absorbing features of water and carbon dioxide &#40;a characteristic of all the 'trace' greenhouse gases with significant radiative forcing&#41;.</p>
-      <br>
-      <p>Since the Industrial Revolution, human sources of nitrous oxide emissions have been growing. Activities such as agriculture, fossil fuel combustion and industrial processes are the primary cause of the increased nitrous oxide concentrations in the atmosphere. Together these sources are responsible for 77% of all human nitrous oxide emissions.</p>
-    </div>
+    <div class="description" v-html="pageDescription" />
     <div class="graphic">
       <LineChart
-        :chart-data="chartData"
+        id="myChart0"
+        :has-filters="true"
+        :has-loader="true"
+        :is-loading="isFetching"
         :chart-width="400"
         :chart-height="isMobile ? 400 : 250"
         :settings="settings.lineChart"
+        :filters="filters.years"
+        :filter-selected="filters.selected"
+        :filter-type="'time'"
+        @change-filter="changeFilter"
       />
     </div>
     <div v-if="youtubeLink" class="other-contents">
       <YoutubeVideo :link="youtubeLink" />
     </div>
-    <div class="actions">
-      <button class="actions__button-back" @click="$emit('go-to')">
-        <p>GO BACK</p>
-      </button>
-    </div>
+    <ActionButtons @go-back="$emit('go-to')" />
   </div>
 </template>
 
 <script>
-import { ref, useFetch, watch } from '@nuxtjs/composition-api'
-import getChartFunctions from '../../composables/chartjs/getChartFunctions'
-import getConverters from '../../composables/global/getConverters'
-import getData from '../../composables/pages/index/nitrousoxide/getData'
-import Service from '../../services/Service'
+// Utilities
+import { ref, watch } from '@nuxtjs/composition-api'
+import nitrousData from '../../composables/pages/index/nitrousoxide/nitrousData'
+// Composables
+import useChartFunctions from '../../composables/chartjs/useChartFunctions'
+import useConverters from '../../composables/global/useConverters'
+import useLineChart from '../../composables/chartjs/useLineChart'
+import useGlobalwarmingAPI from '../../composables/api/useGlobalwarmingAPI'
+// Components
 import VideoHeader from '../../components/VideoHeader'
 import LineChart from '../../components/LineChart'
 import YoutubeVideo from '../../components/YoutubeVideo'
+import ActionButtons from '../../components/ActionButtons'
 export default {
   name: 'NitrousoxidePage',
   components: {
     VideoHeader,
     LineChart,
-    YoutubeVideo
+    YoutubeVideo,
+    ActionButtons
   },
   props: {
     isMobile: {
@@ -67,85 +72,52 @@ export default {
       default: null
     }
   },
-  setup () {
-    const { formatTime } = getConverters()
-    const { updateChartData, updateMaxY, updateMinY, parseData } = getChartFunctions()
-    const { nitrousoxideData, chartData, filters, settings } = getData()
-    const getChartData = () => {
-      chartData.value = {
-        labels: nitrousoxideData.value.map((r) => { return r.time }),
-        datasets: [
-          {
-            label: 'Nitrous Oxide concentration',
-            borderColor: 'rgb(56, 47, 202)',
-            backgroundColor: 'transparent',
-            borderWidth: 1,
-            radius: 0,
-            showLine: true,
-            data: parseData(nitrousoxideData.value, 'time', 'average'),
-            yAxisID: 'y'
-          }, {
-            label: 'Average increment',
-            borderColor: '#000000',
-            backgroundColor: 'transparent',
-            fill: false,
-            borderDash: [6],
-            borderWidth: 1,
-            radius: 0,
-            showLine: true,
-            data: parseData(nitrousoxideData.value, 'time', 'trend'),
-            yAxisID: 'y'
-          }/* , {
-            label: 'NO2 emissions',
-            borderColor: 'red',
-            backgroundColor: 'transparent',
-            fill: false,
-            borderDash: [6],
-            borderWidth: 1,
-            radius: 0,
-            showLine: true,
-            data: this.parseData('time', 'averageUnc'),
-            yAxisID: 'y1'
-          } */
-        ]
-      }
+  setup (props) {
+    const { formatTime } = useConverters()
+    const { updateChartData, updateMaxY, updateMinY, filterData, removeNoise } = useChartFunctions()
+    const {
+      lineChartDataConfig, lineChartMobileConfig, lineFieldsToParse, filters, settings, pageDescription
+    } = nitrousData()
+    const {
+      lineData, lineFilteredData, lineChartData, hasLineFilteredData, setLineChartData
+    } = useLineChart()
+    const isFetching = ref(null)
+
+    watch(filters, (newVal) => {
+      lineFilteredData.value = filterData(lineData.value, 'time', 'years', newVal.selected)
+    }, { deep: true })
+    const changeFilter = (event) => {
+      filters.value.selected = event
     }
 
-    const res = ref(null)
-    const { fetch } = useFetch(async () => {
-      try {
-        res.value = await Service.getNitrousOxide()
-        nitrousoxideData.value = formatTime(res.value.data.nitrous, 'number', ['date'])
-      } catch (e) {
-        res.value = { data: 'Something went wrong with the request. Please try again later' }
+    const nitrousResponse = ref(null)
+    watch(nitrousResponse, (newVal) => {
+      if (newVal.data) {
+        lineData.value = formatTime(nitrousResponse.value.data.nitrous, 'number', ['date'])
+        lineData.value = removeNoise(lineData.value, 'date', '#.year')
       }
-    })
+    }, { deep: true })
+    nitrousResponse.value = useGlobalwarmingAPI(() => { return { service: 'getNitrousOxide' } })
 
-    fetch()
-
-    watch(nitrousoxideData, (newVal, oldVal) => {
+    watch(lineFilteredData, (newVal) => {
       if (!newVal) {
         return
       }
-      getChartData()
-      updateMinY(settings.value, nitrousoxideData.value, ['average', 'trend'], 5, 9999, 'y')
-      updateMaxY(settings.value, nitrousoxideData.value, ['average', 'trend'], 5, 0, 'y')
-      updateMinY(settings.value, nitrousoxideData.value, ['averageUnc'], 3, 9999, 'y1')
-      updateMaxY(settings.value, nitrousoxideData.value, ['averageUnc'], 3, -1000, 'y1')
-      updateChartData(settings.value, 'lineChart', chartData.value)
+      setLineChartData(lineChartDataConfig, lineChartMobileConfig, props.isMobile, lineFieldsToParse)
+      updateMinY(settings.value, lineFilteredData.value, ['average', 'trend'], 5, 9999, 'y')
+      updateMaxY(settings.value, lineFilteredData.value, ['average', 'trend'], 5, 0, 'y')
+      updateMinY(settings.value, lineFilteredData.value, ['averageUnc'], 3, 9999, 'y1')
+      updateMaxY(settings.value, lineFilteredData.value, ['averageUnc'], 3, -1000, 'y1')
+      updateChartData(settings.value, 'lineChart', lineChartData.value)
     })
 
     return {
-      formatTime,
-      updateChartData,
-      updateMaxY,
-      updateMinY,
-      getChartData,
-      parseData,
-      nitrousoxideData,
-      chartData,
+      pageDescription,
+      hasLineFilteredData,
       filters,
-      settings
+      settings,
+      isFetching,
+      changeFilter
     }
   }
 }

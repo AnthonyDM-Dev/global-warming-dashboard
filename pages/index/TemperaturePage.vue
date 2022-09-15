@@ -5,45 +5,50 @@
       :video="video"
       :title="title"
     />
-    <div class="description">
-      <p>Given the tremendous size and heat capacity of the global oceans, it takes a massive amount of heat energy to raise Earth’s average yearly surface temperature even a small amount. The roughly 2-degree Fahrenheit (1 degrees Celsius) increase in global average surface temperature that has occurred since the pre-industrial era (1880-1900) might seem small, but it means a significant increase in accumulated heat.</p>
-      <br>
-      <p>That extra heat is driving regional and seasonal temperature extremes, reducing snow cover and sea ice, intensifying heavy rainfall, and changing habitat ranges for plants and animals—expanding some and shrinking others.</p>
-    </div>
+    <div class="description" v-html="pageDescription" />
     <div class="graphic">
       <LineChart
-        :chart-data="chartData"
+        id="myChart0"
+        :has-filters="true"
+        :has-loader="true"
+        :is-loading="isFetching"
         :chart-width="400"
         :chart-height="isMobile ? 400 : 250"
         :settings="settings.lineChart"
+        :filters="filters.years"
+        :filter-selected="filters.selected"
+        :filter-type="'time'"
+        @change-filter="changeFilter"
       />
     </div>
     <div v-if="youtubeLink" class="other-contents">
       <YoutubeVideo :link="youtubeLink" />
     </div>
-    <div class="actions">
-      <button class="actions__button-back" @click="$emit('go-to')">
-        <p>GO BACK</p>
-      </button>
-    </div>
+    <ActionButtons @go-back="$emit('go-to')" />
   </div>
 </template>
 
 <script>
-import { ref, useFetch, watch } from '@nuxtjs/composition-api'
-import getChartFunctions from '../../composables/chartjs/getChartFunctions'
-import getConverters from '../../composables/global/getConverters'
-import getData from '../../composables/pages/index/temperature/getData'
-import Service from '../../services/Service'
+// Utilities
+import { ref, watch } from '@nuxtjs/composition-api'
+import temperatureData from '../../composables/pages/index/temperature/temperatureData'
+// Composables
+import useChartFunctions from '../../composables/chartjs/useChartFunctions'
+import useConverters from '../../composables/global/useConverters'
+import useLineChart from '../../composables/chartjs/useLineChart'
+import useGlobalwarmingAPI from '../../composables/api/useGlobalwarmingAPI'
+// Components
 import VideoHeader from '../../components/VideoHeader'
 import LineChart from '../../components/LineChart'
 import YoutubeVideo from '../../components/YoutubeVideo'
+import ActionButtons from '../../components/ActionButtons'
 export default {
   name: 'TemperaturePage',
   components: {
     VideoHeader,
     LineChart,
-    YoutubeVideo
+    YoutubeVideo,
+    ActionButtons
   },
   props: {
     isMobile: {
@@ -68,68 +73,48 @@ export default {
     }
   },
   setup (props) {
-    const { formatTime } = getConverters()
-    const { updateChartData, updateMaxY, updateMinY, parseData } = getChartFunctions()
-    const { temperatureData, chartData, filters, settings } = getData()
-    const getChartData = () => {
-      chartData.value = {
-        labels: temperatureData.value.map((r) => { return r.time }),
-        datasets: [
-          {
-            label: 'Measured from land',
-            borderColor: '#a32525',
-            backgroundColor: 'transparent',
-            borderWidth: 1,
-            radius: props.isMobile ? 0 : 2,
-            showLine: props.isMobile,
-            data: parseData(temperatureData.value, 'time', 'land')
-          },
-          {
-            label: 'Measured from space station',
-            borderColor: 'yellow',
-            backgroundColor: 'transparent',
-            borderWidth: 1,
-            radius: props.isMobile ? 0 : 2,
-            showLine: props.isMobile,
-            data: parseData(temperatureData.value, 'time', 'station')
-          }
-        ]
-      }
+    const { formatTime } = useConverters()
+    const { updateChartData, updateMaxY, updateMinY, filterData } = useChartFunctions()
+    const {
+      lineChartDataConfig, lineChartMobileConfig, lineFieldsToParse, filters, settings, pageDescription
+    } = temperatureData()
+    const {
+      lineData, lineFilteredData, lineChartData, hasLineFilteredData, setLineChartData
+    } = useLineChart()
+    const isFetching = ref(null)
+
+    watch(filters, (newVal) => {
+      lineFilteredData.value = filterData(lineData.value, 'time', 'years', newVal.selected)
+    }, { deep: true })
+    const changeFilter = (event) => {
+      filters.value.selected = event
     }
 
-    const res = ref(null)
-    const { fetch } = useFetch(async () => {
-      try {
-        res.value = await Service.getTemperature()
-        temperatureData.value = formatTime(res.value.data.result, 'number', ['time'])
-      } catch (e) {
-        res.value = { data: 'Something went wrong with the request. Please try again later' }
+    const temperatureResponse = ref(null)
+    watch(temperatureResponse, (newVal) => {
+      if (newVal.data) {
+        lineData.value = formatTime(temperatureResponse.value.data.result, 'number', ['time'])
       }
-    })
+    }, { deep: true })
+    temperatureResponse.value = useGlobalwarmingAPI(() => { return { service: 'getTemperature' } })
 
-    fetch()
-
-    watch(temperatureData, (newVal, oldVal) => {
+    watch(lineFilteredData, (newVal) => {
       if (!newVal) {
         return
       }
-      getChartData()
-      updateMinY(settings.value, temperatureData.value, ['land', 'station'], 0.3, 9999, 'y')
-      updateMaxY(settings.value, temperatureData.value, ['land', 'station'], 0.3, 0, 'y')
-      updateChartData(settings.value, 'lineChart', chartData.value)
+      setLineChartData(lineChartDataConfig, lineChartMobileConfig, props.isMobile, lineFieldsToParse)
+      updateMinY(settings.value, lineFilteredData.value, ['land', 'station'], 0.3, 9999, 'y')
+      updateMaxY(settings.value, lineFilteredData.value, ['land', 'station'], 0.3, 0, 'y')
+      updateChartData(settings.value, 'lineChart', lineChartData.value)
     })
 
     return {
-      formatTime,
-      updateChartData,
-      updateMaxY,
-      updateMinY,
-      getChartData,
-      parseData,
-      temperatureData,
-      chartData,
+      pageDescription,
+      hasLineFilteredData,
       filters,
-      settings
+      settings,
+      isFetching,
+      changeFilter
     }
   }
 }

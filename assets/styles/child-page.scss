@@ -4,39 +4,20 @@
     border-radius: 10px;
     margin-bottom: 30px;
 }
-.actions {
-    position: relative;
-    min-height: 20px;
-    &__button {
-        &-back {
-            position: absolute;
-            top: -5%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 16px;
-            font-weight: 200;
-            background-color: rgb(0 0 0 / 40%);
-            color: rgb(255 179 15 / 100%);
-            font-weight: 700;
-            padding: 10px 15px;
-            border: 0px;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: font-size 0.6s;
-            &:hover {
-                font-size: 20px;
-                transition: font-size 0.6s;
-            }
-        }
-    }
-}
 .description {
     padding: 20px;
     font-size: 20px;
     color: white;
+    ul {
+        padding-left: 20px;
+    }
 }
 .graphic {
     margin-bottom: 20px;
+    &__hidden {
+        height: 0px;
+        overflow: hidden;
+    }
 }
 @media screen and (max-width: 1199px) and (min-width: 768px) {
     .child-page {

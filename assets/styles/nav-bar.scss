@@ -1,0 +1,42 @@
+.nav-bar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  &-side {
+    width: 60px;
+  }
+}
+.site {
+  &-logo {
+    &__text {
+      cursor: pointer;
+      color: white;
+      padding: 20px;
+      font-size: 50px;
+      font-weight: 100;
+      text-shadow: -2px 2px 0 #fff, 2px 2px 0 #fff, 2px -2px 0 #fff, -2px -2px 0 #fff;
+    }
+  }
+}
+.volume {
+  color: white;
+  font-size: 30px;
+  i {
+    cursor: pointer;
+  }
+  &__mobile {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 3
+  }
+}
+@media screen and (max-width: 767px) {
+  .nav-bar {
+    justify-content: center;
+    &-side {
+      display: none;
+    }
+  }
+}

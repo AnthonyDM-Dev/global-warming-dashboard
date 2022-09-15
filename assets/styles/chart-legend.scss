@@ -1,0 +1,31 @@
+.legend {
+  font-family: 'Raleway', sans-serif;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  &__description {
+    padding-bottom: 10px;
+  }
+  table, h3 {
+    text-align: center;
+  }
+  th, td {
+    padding: 5px;
+    border: 1px solid gray;
+    border-collapse: collapse;
+  }
+}
+.reverse {
+  &-tr {
+    display: block; float: left;
+  }
+  &-th {
+    display: block;
+  }
+  &-td {
+    display: block;
+  }
+}

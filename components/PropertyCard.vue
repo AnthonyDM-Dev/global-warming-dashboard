@@ -18,7 +18,7 @@
 
 <script>
 export default {
-  name: 'EarthModel',
+  name: 'PropertyCard',
   props: {
     backgroundColor: {
       type: String,

@@ -5,47 +5,50 @@
       :video="video"
       :title="title"
     />
-    <div class="description">
-      <p>Today, human sources are responsible for 60% of global methane emissions, coming primarily  from the burning of fossil fuels, decomposition in landfills and the agriculture sector. Nearly a quarter of methane emissions can be attributed to agriculture, much of which is from raising livestock.</p>
-      <br>
-      <p>Atmospheric methane concentrations have more than doubled since the Industrial Revolution because of intensive use of oil, gas and coal, rising demand for beef and dairy products and increased production of food and organic waste.</p>
-      <br>
-      <p>Methane emissions in the United States decreased by 17% between 1990 and 2020. During this time period, emissions increased from sources associated with agricultural activities, while emissions decreased from other sources including landfills and coal mining and from natural gas and petroleum systems.</p>
-    </div>
+    <div class="description" v-html="pageDescription" />
     <div class="graphic">
       <LineChart
-        :chart-data="chartData"
+        id="myChart0"
+        :has-filters="true"
+        :has-loader="true"
+        :is-loading="isFetching"
         :chart-width="400"
         :chart-height="isMobile ? 400 : 250"
         :settings="settings.lineChart"
+        :filters="filters.years"
+        :filter-selected="filters.selected"
+        :filter-type="'time'"
+        @change-filter="changeFilter"
       />
     </div>
     <div v-if="youtubeLink" class="other-contents">
       <YoutubeVideo :link="youtubeLink" />
     </div>
-    <div class="actions">
-      <button class="actions__button-back" @click="$emit('go-to')">
-        <p>GO BACK</p>
-      </button>
-    </div>
+    <ActionButtons @go-back="$emit('go-to')" />
   </div>
 </template>
 
 <script>
-import { ref, useFetch, watch } from '@nuxtjs/composition-api'
-import getChartFunctions from '../../composables/chartjs/getChartFunctions'
-import getConverters from '../../composables/global/getConverters'
-import getData from '../../composables/pages/index/methane/getData'
-import Service from '../../services/Service'
+// Utilities
+import { ref, watch } from '@nuxtjs/composition-api'
+import methaneData from '../../composables/pages/index/methane/methaneData'
+// Composables
+import useChartFunctions from '../../composables/chartjs/useChartFunctions'
+import useConverters from '../../composables/global/useConverters'
+import useLineChart from '../../composables/chartjs/useLineChart'
+import useGlobalwarmingAPI from '../../composables/api/useGlobalwarmingAPI'
+// Components
 import VideoHeader from '../../components/VideoHeader'
 import LineChart from '../../components/LineChart'
 import YoutubeVideo from '../../components/YoutubeVideo'
+import ActionButtons from '../../components/ActionButtons'
 export default {
   name: 'MethanePage',
   components: {
     VideoHeader,
     LineChart,
-    YoutubeVideo
+    YoutubeVideo,
+    ActionButtons
   },
   props: {
     isMobile: {
@@ -69,86 +72,51 @@ export default {
       default: null
     }
   },
-  setup () {
-    const { formatTime } = getConverters()
-    const { updateChartData, updateMaxY, updateMinY, parseData } = getChartFunctions()
-    const { methaneData, chartData, filters, settings } = getData()
-    const getChartData = () => {
-      chartData.value = {
-        labels: methaneData.value.map((r) => { return r.time }),
-        datasets: [
-          {
-            label: 'Methane concentration',
-            borderColor: 'rgb(56, 47, 202)',
-            backgroundColor: 'transparent',
-            borderWidth: 1,
-            radius: 0,
-            showLine: true,
-            data: parseData(methaneData.value, 'time', 'average'),
-            yAxisID: 'y'
-          }, {
-            label: 'Average increment',
-            borderColor: '#000000',
-            backgroundColor: 'transparent',
-            fill: false,
-            borderDash: [6],
-            borderWidth: 1,
-            radius: 0,
-            showLine: true,
-            data: parseData(methaneData.value, 'time', 'trend'),
-            yAxisID: 'y'
-          }/* , {
-            label: 'Methane emissions',
-            borderColor: 'red',
-            backgroundColor: 'transparent',
-            fill: false,
-            borderDash: [6],
-            borderWidth: 1,
-            radius: 0,
-            showLine: true,
-            data: this.parseData('time', 'trendUnc'),
-            yAxisID: 'y1'
-          } */
+  setup (props) {
+    const { formatTime } = useConverters()
+    const { updateChartData, updateMaxY, updateMinY, filterData, removeNoise } = useChartFunctions()
+    const {
+      lineChartDataConfig, lineChartMobileConfig, lineFieldsToParse, filters, settings, pageDescription
+    } = methaneData()
+    const {
+      lineData, lineFilteredData, lineChartData, hasLineFilteredData, setLineChartData
+    } = useLineChart()
+    const isFetching = ref(null)
 
-        ]
-      }
+    watch(filters, (newVal) => {
+      lineFilteredData.value = filterData(lineData.value, 'time', 'years', newVal.selected)
+    }, { deep: true })
+    const changeFilter = (event) => {
+      filters.value.selected = event
     }
-
-    const res = ref(null)
-    const { fetch } = useFetch(async () => {
-      try {
-        res.value = await Service.getMethane()
-        methaneData.value = formatTime(res.value.data.methane, 'number', ['date'])
-      } catch (e) {
-        res.value = { data: 'Something went wrong with the request. Please try again later' }
+    const methaneResponse = ref(null)
+    watch(methaneResponse, (newVal) => {
+      if (newVal.data) {
+        lineData.value = formatTime(methaneResponse.value.data.methane, 'number', ['date'])
+        lineData.value = removeNoise(lineData.value, 'date', '#.year')
       }
-    })
+    }, { deep: true })
+    methaneResponse.value = useGlobalwarmingAPI(() => { return { service: 'getMethane' } })
 
-    fetch()
-
-    watch(methaneData, (newVal, oldVal) => {
+    watch(lineFilteredData, (newVal) => {
       if (!newVal) {
         return
       }
-      getChartData()
-      updateMinY(settings.value, methaneData.value, ['average', 'trend'], 30, 99999, 'y')
-      updateMaxY(settings.value, methaneData.value, ['average', 'trend'], 30, 0, 'y')
-      updateMinY(settings.value, methaneData.value, ['trendUnc'], 3, 99999, 'y1')
-      updateMaxY(settings.value, methaneData.value, ['trendUnc'], 3, -1000, 'y1')
-      updateChartData(settings.value, 'lineChart', chartData.value)
+      setLineChartData(lineChartDataConfig, lineChartMobileConfig, props.isMobile, lineFieldsToParse)
+      updateMinY(settings.value, lineFilteredData.value, ['average', 'trend'], 30, 99999, 'y')
+      updateMaxY(settings.value, lineFilteredData.value, ['average', 'trend'], 30, 0, 'y')
+      updateMinY(settings.value, lineFilteredData.value, ['trendUnc'], 3, 99999, 'y1')
+      updateMaxY(settings.value, lineFilteredData.value, ['trendUnc'], 3, -1000, 'y1')
+      updateChartData(settings.value, 'lineChart', lineChartData.value)
     })
 
     return {
-      formatTime,
-      updateChartData,
-      updateMaxY,
-      updateMinY,
-      getChartData,
-      parseData,
-      methaneData,
-      chartData,
+      pageDescription,
+      hasLineFilteredData,
       filters,
-      settings
+      settings,
+      isFetching,
+      changeFilter
     }
   }
 }

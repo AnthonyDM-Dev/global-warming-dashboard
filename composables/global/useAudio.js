@@ -1,17 +1,17 @@
 import { ref } from '@nuxtjs/composition-api'
 
-const getAudio = () => {
-  const audio = ref({
-    isPlaying: false,
-    isMuted: false,
-    list: {
-      background: null,
-      home: null,
-      dive: null,
-      slide: null
-    }
-  })
+const audio = ref({
+  isPlaying: false,
+  isMuted: false,
+  list: {
+    background: null,
+    home: null,
+    dive: null,
+    slide: null
+  }
+})
 
+const useAudio = () => {
   const loadAudio = () => {
     audio.value.list = {
       background: new Audio(require('@/assets/sounds/space.mp3')),
@@ -22,15 +22,17 @@ const getAudio = () => {
   }
   const handleAudio = (action) => {
     switch (action) {
-      case 'play':
+      case 'play': {
         audio.value.list.background.loop = true
         audio.value.list.background.play()
         audio.value.isPlaying = true
         break
-      case 'triggerMute':
+      }
+      case 'triggerMute': {
         audio.value.list.background.muted = !audio.value.list.background.muted
         audio.value.isMuted = !audio.value.isMuted
         break
+      }
     }
   }
 
@@ -48,4 +50,4 @@ const getAudio = () => {
   }
 }
 
-export default getAudio
+export default useAudio

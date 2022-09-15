@@ -5,45 +5,50 @@
       :video="video"
       :title="title"
     />
-    <div class="description">
-      <p>The Arctic is warming three times as fast and the global average. This is mainly because melting of snow and ice exposes a darker surface and increases the amount of solar energy absorbed in these areas &#40;albedo effect&#41;. This significant regional warming leads to continued loss of sea ice, melting of glaciers and of the Greenland ice cap.</p>
-      <br>
-      <p>Warming may influence bottom water formation through surface warming and increased input of fresh water; this would have impact on the “motor” in the ocean system, which in turn defines the framework for the world’s climate. Glaciers melt and contribute strongly toward rising sea levels.</p>
-    </div>
+    <div class="description" v-html="pageDescription" />
     <div class="graphic">
       <LineChart
-        :chart-data="chartData"
+        id="myChart0"
+        :has-filters="true"
+        :has-loader="true"
+        :is-loading="isFetching"
         :chart-width="400"
         :chart-height="isMobile ? 400 : 250"
         :settings="settings.lineChart"
+        :filters="filters.years"
+        :filter-selected="filters.selected"
+        :filter-type="'time'"
+        @change-filter="changeFilter"
       />
     </div>
     <div v-if="youtubeLink" class="other-contents">
       <YoutubeVideo :link="youtubeLink" />
     </div>
-    <div class="actions">
-      <button class="actions__button-back" @click="$emit('go-to')">
-        <p>GO BACK</p>
-      </button>
-    </div>
+    <ActionButtons @go-back="$emit('go-to')" />
   </div>
 </template>
 
 <script>
-import { ref, useFetch, watch } from '@nuxtjs/composition-api'
-import getChartFunctions from '../../composables/chartjs/getChartFunctions'
-import getConverters from '../../composables/global/getConverters'
-import getData from '../../composables/pages/index/polarice/getData'
-import Service from '../../services/Service'
+// Utilities
+import { ref, watch } from '@nuxtjs/composition-api'
+import polariceData from '../../composables/pages/index/polarice/polariceData'
+// Composables
+import useChartFunctions from '../../composables/chartjs/useChartFunctions'
+import useConverters from '../../composables/global/useConverters'
+import useLineChart from '../../composables/chartjs/useLineChart'
+import useGlobalwarmingAPI from '../../composables/api/useGlobalwarmingAPI'
+// Components
 import VideoHeader from '../../components/VideoHeader'
 import LineChart from '../../components/LineChart'
 import YoutubeVideo from '../../components/YoutubeVideo'
+import ActionButtons from '../../components/ActionButtons'
 export default {
   name: 'PolaricePage',
   components: {
     VideoHeader,
     LineChart,
-    YoutubeVideo
+    YoutubeVideo,
+    ActionButtons
   },
   props: {
     isMobile: {
@@ -67,64 +72,54 @@ export default {
       default: null
     }
   },
-  setup () {
-    const { formatTime } = getConverters()
-    const { updateChartData, updateMaxY, updateMinY, parseData } = getChartFunctions()
-    const { polariceData, chartData, filters, settings } = getData()
+  setup (props) {
+    const { formatTime } = useConverters()
+    const { updateChartData, updateMaxY, updateMinY, filterData } = useChartFunctions()
+    const {
+      lineChartDataConfig, lineChartMobileConfig, lineFieldsToParse, filters, settings, pageDescription
+    } = polariceData()
+    const {
+      lineData, lineFilteredData, lineChartData, hasLineFilteredData, setLineChartData
+    } = useLineChart()
+    const isFetching = ref(null)
+
+    watch(filters, (newVal) => {
+      lineFilteredData.value = filterData(lineData.value, 'time', 'years', newVal.selected)
+    }, { deep: true })
+    const changeFilter = (event) => {
+      filters.value.selected = event
+    }
+
     const removeNoise = (data, key, value) => {
       return data.filter((a) => { return a[key] !== value })
     }
-    const getChartData = () => {
-      chartData.value = {
-        labels: polariceData.value.map((r) => { return r.time }),
-        datasets: [
-          {
-            label: 'Arctic extension',
-            borderColor: 'rgb(56, 47, 202)',
-            backgroundColor: 'transparent',
-            borderWidth: 1,
-            radius: 0,
-            showLine: true,
-            data: parseData(polariceData.value, 'time', 'extent')
-          }
-        ]
+
+    const polariceResponse = ref(null)
+    watch(polariceResponse, (newVal) => {
+      if (newVal.data) {
+        lineData.value = formatTime(polariceResponse.value.data.arcticData, 'splittedData', ['year', 'month'])
+        lineData.value = removeNoise(lineData.value, 'data-type', 'NRTSI-G')
       }
-    }
+    }, { deep: true })
+    polariceResponse.value = useGlobalwarmingAPI(() => { return { service: 'getArctic' } })
 
-    const res = ref(null)
-    const { fetch } = useFetch(async () => {
-      try {
-        res.value = await Service.getArctic()
-        polariceData.value = formatTime(res.value.data.arcticData, 'splittedData', ['year', 'month'])
-        polariceData.value = removeNoise(polariceData.value, 'data-type', 'NRTSI-G')
-      } catch (e) {
-        res.value = { data: 'Something went wrong with the request. Please try again later' }
-      }
-    })
-
-    fetch()
-
-    watch(polariceData, (newVal, oldVal) => {
+    watch(lineFilteredData, (newVal) => {
       if (!newVal) {
         return
       }
-      getChartData()
-      updateMinY(settings.value, polariceData.value, ['extent'], 1, 9999, 'y')
-      updateMaxY(settings.value, polariceData.value, ['extent'], 1, 0, 'y')
-      updateChartData(settings.value, 'lineChart', chartData.value)
+      setLineChartData(lineChartDataConfig, lineChartMobileConfig, props.isMobile, lineFieldsToParse)
+      updateMinY(settings.value, lineFilteredData.value, ['extent'], 1, 9999, 'y')
+      updateMaxY(settings.value, lineFilteredData.value, ['extent'], 1, 0, 'y')
+      updateChartData(settings.value, 'lineChart', lineChartData.value)
     })
 
     return {
-      formatTime,
-      updateChartData,
-      updateMaxY,
-      updateMinY,
-      getChartData,
-      parseData,
-      polariceData,
-      chartData,
+      pageDescription,
+      hasLineFilteredData,
       filters,
-      settings
+      settings,
+      isFetching,
+      changeFilter
     }
   }
 }
