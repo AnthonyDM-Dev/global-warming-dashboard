@@ -72,7 +72,7 @@ export default {
       default: null
     }
   },
-  setup (props) {
+  setup (props, context) {
     const { formatTime } = useConverters()
     const { updateChartData, updateMaxY, updateMinY, filterData, removeNoise } = useChartFunctions()
     const {
@@ -91,6 +91,9 @@ export default {
     }
     const methaneResponse = ref(null)
     watch(methaneResponse, (newVal) => {
+      if (newVal.error) {
+        context.emit('trigger-popup')
+      }
       if (newVal.data) {
         lineData.value = formatTime(methaneResponse.value.data.methane, 'number', ['date'])
         lineData.value = removeNoise(lineData.value, 'date', '#.year')

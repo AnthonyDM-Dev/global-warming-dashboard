@@ -20,8 +20,10 @@ const useAirForm = () => {
   }
 
   const searchCity = debounce((form) => {
-    airResponse.value = useAirAPI(() => { return { service: 'getAirPollution', parameters: locations.value[form.locations.value] } })
-    historyResponse.value = useAirAPI(() => { return { service: 'getAirHistory', parameters: { location: locations.value[form.locations.value], startDate: startDate.value, endDate: endDate.value } } })
+    if (locations.value[form.locations.value]) {
+      airResponse.value = useAirAPI(() => { return { service: 'getAirPollution', parameters: locations.value[form.locations.value] } })
+      historyResponse.value = useAirAPI(() => { return { service: 'getAirHistory', parameters: { location: locations.value[form.locations.value], startDate: startDate.value, endDate: endDate.value } } })
+    }
   }, 500)
 
   watch(coordsResponse, (newVal) => {

@@ -28,7 +28,7 @@ const useChildPage = () => {
   }
   const getNavLink = async (action, page) => {
     const nextPage = properties.value.list[page.index + 1] || properties.value.list[0]
-    const backPage = properties.value.list[page.index - 1] || properties.value.list[4]
+    const backPage = properties.value.list[page.index - 1] || properties.value.list[5]
     playAudio('slide')
     if (action === 'next') {
       await changeChildPageVisibility('out', nextPage.link, 'right')

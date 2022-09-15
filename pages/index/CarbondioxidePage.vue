@@ -72,7 +72,7 @@ export default {
       default: null
     }
   },
-  setup (props) {
+  setup (props, context) {
     const { formatTime } = useConverters()
     const { updateChartData, updateMaxY, updateMinY, filterData } = useChartFunctions()
     const {
@@ -92,6 +92,9 @@ export default {
 
     const carbonResponse = ref(null)
     watch(carbonResponse, (newVal) => {
+      if (newVal.error) {
+        context.emit('trigger-popup')
+      }
       if (newVal.data) {
         lineData.value = formatTime(carbonResponse.value.data.co2, 'splittedData', ['year', 'month', 'day'])
       }

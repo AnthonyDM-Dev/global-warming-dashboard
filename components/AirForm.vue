@@ -1,7 +1,8 @@
 <template>
   <div class="air-form">
     <p class="air-form__heading">
-      Explore air pollution around the world
+      Follow the steps appearing below and
+      <br>explore air pollution around the world
     </p>
     <form
       id="air"

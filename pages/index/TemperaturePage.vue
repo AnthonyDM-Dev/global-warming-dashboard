@@ -72,7 +72,7 @@ export default {
       default: null
     }
   },
-  setup (props) {
+  setup (props, context) {
     const { formatTime } = useConverters()
     const { updateChartData, updateMaxY, updateMinY, filterData } = useChartFunctions()
     const {
@@ -92,6 +92,9 @@ export default {
 
     const temperatureResponse = ref(null)
     watch(temperatureResponse, (newVal) => {
+      if (newVal.error) {
+        context.emit('trigger-popup')
+      }
       if (newVal.data) {
         lineData.value = formatTime(temperatureResponse.value.data.result, 'number', ['time'])
       }

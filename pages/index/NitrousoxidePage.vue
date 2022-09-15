@@ -72,7 +72,7 @@ export default {
       default: null
     }
   },
-  setup (props) {
+  setup (props, context) {
     const { formatTime } = useConverters()
     const { updateChartData, updateMaxY, updateMinY, filterData, removeNoise } = useChartFunctions()
     const {
@@ -92,6 +92,9 @@ export default {
 
     const nitrousResponse = ref(null)
     watch(nitrousResponse, (newVal) => {
+      if (newVal.error) {
+        context.emit('trigger-popup')
+      }
       if (newVal.data) {
         lineData.value = formatTime(nitrousResponse.value.data.nitrous, 'number', ['date'])
         lineData.value = removeNoise(lineData.value, 'date', '#.year')

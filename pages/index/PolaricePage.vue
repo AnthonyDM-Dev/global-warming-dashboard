@@ -72,7 +72,7 @@ export default {
       default: null
     }
   },
-  setup (props) {
+  setup (props, context) {
     const { formatTime } = useConverters()
     const { updateChartData, updateMaxY, updateMinY, filterData } = useChartFunctions()
     const {
@@ -96,6 +96,9 @@ export default {
 
     const polariceResponse = ref(null)
     watch(polariceResponse, (newVal) => {
+      if (newVal.error) {
+        context.emit('trigger-popup')
+      }
       if (newVal.data) {
         lineData.value = formatTime(polariceResponse.value.data.arcticData, 'splittedData', ['year', 'month'])
         lineData.value = removeNoise(lineData.value, 'data-type', 'NRTSI-G')
