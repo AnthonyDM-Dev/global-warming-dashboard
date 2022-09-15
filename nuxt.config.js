@@ -81,6 +81,11 @@ export default {
           esModule: false
         }
       })
+      config.module.rules.push({
+        test: /\.сjs$/,
+        include: /node_modules/,
+        type: 'javascript/auto'
+      })
     }
   },
 
