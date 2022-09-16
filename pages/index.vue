@@ -63,7 +63,7 @@
 
 <script>
 // Utilities
-import { onMounted, watch, useRoute, useRouter, computed } from '@nuxtjs/composition-api'
+import { onMounted, watch, computed, useRoute, useRouter } from '@nuxtjs/composition-api'
 import { debounce } from 'debounce'
 // Composables
 import useAudio from '../composables/global/useAudio'
@@ -88,8 +88,8 @@ export default {
     BannerCover
   },
   setup () {
-    const route = useRoute()
     const router = useRouter()
+    const route = useRoute()
     const { scrollToTop } = useAnimations()
     const { audio, loadAudio, handleAudio, playAudio } = useAudio()
     const { properties, checkPropertiesVisibility } = useProperties()
@@ -133,7 +133,7 @@ export default {
         await checkPropertiesVisibility(path.value)
         await changeChildPageVisibility(null, path.value, null)
       }
-    })
+    }, { deep: true })
     watch(path, async (newVal) => {
       if (newVal === '/') {
         await checkPropertiesVisibility(newVal)
