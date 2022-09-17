@@ -1,2 +1,0 @@
-/airpage http://api.openweathermap.org/geo/1.0/:splat 200!
-/airpage http://api.openweathermap.org/data/2.5/:splat 200!

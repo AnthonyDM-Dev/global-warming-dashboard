@@ -21,8 +21,8 @@ Project is created with:
 * Watch it live on localhost:3000.
 
 ## Demo
-Try the demo by clicking "[here](https://global-warming-dashboard.vercel.app/)"
-Deployed on Vercel.
+Try the demo by clicking "[here](http://147.182.162.16:3000/)"
+Deployed on DigitalOcean.
 
 ## App PDF Presentation
 To have a preview of the site you can have a look at my PDF
