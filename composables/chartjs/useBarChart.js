@@ -1,20 +1,20 @@
-import { ref, computed, watch } from '@nuxtjs/composition-api'
-import useAirAPI from '../api/useAirAPI'
+import { ref, computed } from '@nuxtjs/composition-api'
 import useConverters from '../global/useConverters'
 import useComparisonData from './useComparisonData'
 import useChartFunctions from './useChartFunctions'
 
 const { parseData } = useChartFunctions()
-const { startingDataset, lessPolluted, mostPolluted } = useComparisonData()
+const { startingDataset } = useComparisonData()
 const { capitalize } = useConverters()
 
+const barData = ref(null)
+const barChartData = ref(null)
+const barChartArray = ref(startingDataset.value)
+const hasBarData = computed(() => {
+  return barData.value != null
+})
+
 const useBarChart = () => {
-  const barData = ref(null)
-  const barChartData = ref(null)
-  const barChartArray = ref(startingDataset.value)
-  const hasBarData = computed(() => {
-    return barData.value != null
-  })
   const updateBarItemField = (type, key, value) => {
     const item = getBarItem(type)
     item[key] = value
@@ -29,7 +29,7 @@ const useBarChart = () => {
       state: form.countries.value,
       lat: locations[form.locations.value].lat,
       lon: locations[form.locations.value].lon,
-      components: apiResult.data.list[0].components
+      components: apiResult.list[0].components
     }
     resetToDefaultArray()
     barChartArray.value.push(itemToAdd)
@@ -68,22 +68,13 @@ const useBarChart = () => {
     }
   }
 
-  /* FIRST DATA FETCHING ON PAGE FIRST LOAD */
-  lessPolluted.value = useAirAPI(() => { return { service: 'getAirPollution', parameters: getBarItem('lessPolluted') } })
-  watch(lessPolluted, (newVal) => {
-    updateBarItemField('lessPolluted', 'components', newVal.data.list[0].components)
-  }, { deep: true })
-  mostPolluted.value = useAirAPI(() => { return { service: 'getAirPollution', parameters: getBarItem('mostPolluted') } })
-  watch(mostPolluted, (newVal) => {
-    updateBarItemField('mostPolluted', 'components', newVal.data.list[0].components)
-  }, { deep: true })
-  /* END OF FETCH */
-
   return {
     barData,
     hasBarData,
     barChartData,
     barChartArray,
+    updateBarItemField,
+    getBarItem,
     addToBarChartArray,
     resetToDefaultArray,
     setBarChartData

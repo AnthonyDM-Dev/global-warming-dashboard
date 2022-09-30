@@ -5,13 +5,9 @@ const useComparisonData = () => {
     { type: 'lessPolluted', city: 'Calgary', state: 'CA', lat: 51.0460954, lon: -114.065465, components: null },
     { type: 'mostPolluted', city: 'Hotan City', state: 'CH', lat: 37.1126842, lon: 79.9111626, components: null }
   ])
-  const lessPolluted = ref(null)
-  const mostPolluted = ref(null)
 
   return {
-    startingDataset,
-    lessPolluted,
-    mostPolluted
+    startingDataset
   }
 }
 

@@ -1,31 +1,32 @@
-import { ref, watchEffect } from '@nuxtjs/composition-api'
+import { ref } from '@nuxtjs/composition-api'
 import OWAirPollution from '../../services/api/OWAirPollution'
 
-export default function useAirAPI (dataObj) {
-  const data = ref(null)
-  const error = ref(null)
-  const isPending = ref(false)
+const airResponse = ref(null)
+const airError = ref(null)
+const isAirPending = ref(false)
 
-  const stop = watchEffect(async () => {
-    isPending.value = true
-    data.value = null
-    error.value = null
-    await OWAirPollution[dataObj().service](dataObj().parameters)
+const useAirAPI = () => {
+  const fetchAirData = async (options) => {
+    isAirPending.value = true
+    airResponse.value = null
+    airError.value = null
+    await OWAirPollution[options.service](options.parameters)
       .then((res) => {
-        data.value = res.data
-        isPending.value = false
+        airResponse.value = res.data
+        isAirPending.value = false
       })
       .catch((e) => {
-        error.value = e
-        isPending.value = false
+        airError.value = e
+        isAirPending.value = false
       })
-  })
-
-  stop()
+  }
 
   return {
-    data,
-    error,
-    isPending
+    airResponse,
+    airError,
+    isAirPending,
+    fetchAirData
   }
 }
+
+export default useAirAPI

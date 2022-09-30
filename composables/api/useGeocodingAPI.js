@@ -1,31 +1,32 @@
-import { ref, watchEffect } from '@nuxtjs/composition-api'
+import { ref } from '@nuxtjs/composition-api'
 import OWGeocoding from '../../services/api/OWGeocoding'
 
-export default function useAirAPI (dataObj) {
-  const data = ref(null)
-  const error = ref(null)
-  const isPending = ref(false)
+const geoResponse = ref(null)
+const geoError = ref(null)
+const isGeoPending = ref(false)
 
-  const stop = watchEffect(async () => {
-    isPending.value = true
-    data.value = null
-    error.value = null
-    await OWGeocoding[dataObj().service](dataObj().parameters)
+const useGeocodingAPI = () => {
+  const fetchGeoData = async (options) => {
+    isGeoPending.value = true
+    geoResponse.value = null
+    geoError.value = null
+    await OWGeocoding[options.service](options.parameters)
       .then((res) => {
-        data.value = res.data
-        isPending.value = false
+        geoResponse.value = res.data
+        isGeoPending.value = false
       })
       .catch((e) => {
-        error.value = e
-        isPending.value = false
+        geoError.value = e
+        isGeoPending.value = false
       })
-  })
-
-  stop()
+  }
 
   return {
-    data,
-    error,
-    isPending
+    geoResponse,
+    geoError,
+    isGeoPending,
+    fetchGeoData
   }
 }
+
+export default useGeocodingAPI

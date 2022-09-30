@@ -3,7 +3,7 @@ import { ref } from '@nuxtjs/composition-api'
 const popup = ref({
   isVisible: false,
   title: 'Something went wrong.',
-  description: 'Please check that all fields are not blank or check your internet connection and try again in few moments.',
+  description: 'Please check your internet connection or try again in few moments.',
   backgroundColor: '#c23131e8'
 })
 

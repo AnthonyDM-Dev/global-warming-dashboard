@@ -1,8 +1,9 @@
 <template>
   <div class="heading">
-    <video class="heading__video" autoplay loop preload playsinline>
+    <!--<video class="heading__video" autoplay loop preload playsinline>
       <source :src="'/videos/' + video" type="video/mp4">
-    </video>
+    </video>-->
+    <img class="heading__video" :src="'/videos/' + video">
     <div class="heading__overlay" />
     <p class="heading__text">
       {{ title }}

@@ -5,15 +5,16 @@ import useChartFunctions from './useChartFunctions'
 const { convertDateToUnix, subtractFromDate } = useConverters()
 const { parseData } = useChartFunctions()
 
+const lineData = ref(null)
+const lineFilteredData = ref(null)
+const lineChartData = ref(null)
+const hasLineFilteredData = computed(() => {
+  return lineFilteredData.value != null
+})
+
 const useLineChart = () => {
-  const lineData = ref(null)
-  const lineFilteredData = ref(null)
-  const lineChartData = ref(null)
   const startDate = ref(convertDateToUnix(new Date(2019, 10, 27)))
   const endDate = ref(convertDateToUnix(subtractFromDate(new Date(), { months: 1 })))
-  const hasLineFilteredData = computed(() => {
-    return lineFilteredData.value != null
-  })
   const setLineChartData = (config, mobileConfig, isMobile, fieldsToParse) => {
     lineChartData.value = config
     if (isMobile) {
@@ -46,6 +47,10 @@ const useLineChart = () => {
     }
   }
 
+  const resetLineChart = () => {
+    lineData.value = null
+  }
+
   watch(lineData, (newVal) => {
     lineFilteredData.value = newVal
   }, { deep: true })
@@ -57,7 +62,8 @@ const useLineChart = () => {
     hasLineFilteredData,
     startDate,
     endDate,
-    setLineChartData
+    setLineChartData,
+    resetLineChart
   }
 }
 

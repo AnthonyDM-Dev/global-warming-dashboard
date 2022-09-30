@@ -11,7 +11,7 @@
         id="myChart0"
         :has-filters="true"
         :has-loader="true"
-        :is-loading="isFetching"
+        :is-loading="isPending"
         :chart-width="400"
         :chart-height="isMobile ? 400 : 250"
         :settings="settings.lineChart"
@@ -30,10 +30,11 @@
 
 <script>
 // Utilities
-import { ref, watch } from '@nuxtjs/composition-api'
+import { watch, onMounted } from '@nuxtjs/composition-api'
 import temperatureData from '../../composables/pages/index/temperature/temperatureData'
 // Composables
 import useChartFunctions from '../../composables/chartjs/useChartFunctions'
+import usePopup from '../../composables/global/usePopup'
 import useConverters from '../../composables/global/useConverters'
 import useLineChart from '../../composables/chartjs/useLineChart'
 import useGlobalwarmingAPI from '../../composables/api/useGlobalwarmingAPI'
@@ -72,7 +73,8 @@ export default {
       default: null
     }
   },
-  setup (props, context) {
+  setup (props) {
+    const { triggerPopup } = usePopup()
     const { formatTime } = useConverters()
     const { updateChartData, updateMaxY, updateMinY, filterData } = useChartFunctions()
     const {
@@ -81,25 +83,23 @@ export default {
     const {
       lineData, lineFilteredData, lineChartData, hasLineFilteredData, setLineChartData
     } = useLineChart()
-    const isFetching = ref(null)
+    const {
+      data, error, isPending, fetchWarmingData
+    } = useGlobalwarmingAPI({ service: 'getTemperature' })
 
-    watch(filters, (newVal) => {
-      lineFilteredData.value = filterData(lineData.value, 'time', 'years', newVal.selected)
-    }, { deep: true })
+    onMounted(async () => {
+      await fetchWarmingData()
+      if (!error.value) {
+        lineData.value = formatTime(data.value.result, 'number', ['time'])
+      } else {
+        triggerPopup()
+      }
+    })
+
     const changeFilter = (event) => {
       filters.value.selected = event
+      lineFilteredData.value = filterData(lineData.value, 'time', 'years', filters.value.selected)
     }
-
-    const temperatureResponse = ref(null)
-    watch(temperatureResponse, (newVal) => {
-      if (newVal.error) {
-        context.emit('trigger-popup')
-      }
-      if (newVal.data) {
-        lineData.value = formatTime(temperatureResponse.value.data.result, 'number', ['time'])
-      }
-    }, { deep: true })
-    temperatureResponse.value = useGlobalwarmingAPI(() => { return { service: 'getTemperature' } })
 
     watch(lineFilteredData, (newVal) => {
       if (!newVal) {
@@ -116,7 +116,7 @@ export default {
       hasLineFilteredData,
       filters,
       settings,
-      isFetching,
+      isPending,
       changeFilter
     }
   }

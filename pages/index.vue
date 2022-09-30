@@ -29,7 +29,6 @@
             :youtube-link="page?.youtubeLink"
             :color="page?.backgroundColor"
             @go-to="returnToHomepage"
-            @trigger-popup="triggerPopup"
           />
           <div class="button__arrow-left" @click="browsePage('back', page)">
             <i class="fa-solid fa-angle-left" />
@@ -93,7 +92,7 @@ export default {
     const { scrollToTop } = useAnimations()
     const { audio, loadAudio, handleAudio, playAudio } = useAudio()
     const { properties, checkPropertiesVisibility } = useProperties()
-    const { popup, triggerPopup } = usePopup()
+    const { popup } = usePopup()
     const { banner, triggerBanner, triggerStartButton } = useBanner()
     const { skipIntro, hasIntroEnded } = useIntro()
     const { childPage, changeChildPageVisibility, getNavLink } = useChildPage()
@@ -158,7 +157,6 @@ export default {
       browsePage,
       returnToHomepage,
       triggerBanner,
-      triggerPopup,
       triggerStartButton,
       path
     }

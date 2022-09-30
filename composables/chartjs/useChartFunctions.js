@@ -26,17 +26,9 @@ const useChartFunctions = () => {
   }
   const parseData = (data, xValue, yValue) => {
     if (Array.isArray(xValue) || Array.isArray(yValue)) {
-      return data.map((r) => {
-        return {
-          x: getTreeValue(r, xValue, 0), y: getTreeValue(r, yValue, 0)
-        }
-      })
+      return data.map(r => ({ x: getTreeValue(r, xValue, 0), y: getTreeValue(r, yValue, 0) }))
     } else {
-      return data.map((r) => {
-        return {
-          x: r[xValue], y: r[yValue]
-        }
-      })
+      return data.map(r => ({ x: r[xValue], y: r[yValue] }))
     }
   }
   const filterData = (data, axis, filterType, filterValue) => {

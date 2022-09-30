@@ -12,10 +12,10 @@ const apiClient = axios.create({
 apiClient.defaults.timeout = 15000
 
 export default {
-  getAirPollution (location) {
-    return apiClient.get('/air_pollution?lat=' + location.lat + '&lon=' + location.lon + '&appid=' + process.env.API_OPENWEATHER_KEY)
+  getAirPollution (data) {
+    return apiClient.get('/air_pollution?lat=' + data.location.lat + '&lon=' + data.location.lon + '&appid=' + process.env.API_OPENWEATHER_KEY)
   },
-  getAirHistory (dataObj) {
-    return apiClient.get('/air_pollution/history?lat=' + dataObj.location.lat + '&lon=' + dataObj.location.lon + '&start=' + dataObj.startDate + '&end=' + dataObj.endDate + '&appid=' + process.env.API_OPENWEATHER_KEY)
+  getAirHistory (data) {
+    return apiClient.get('/air_pollution/history?lat=' + data.location.lat + '&lon=' + data.location.lon + '&start=' + data.startDate + '&end=' + data.endDate + '&appid=' + process.env.API_OPENWEATHER_KEY)
   }
 }

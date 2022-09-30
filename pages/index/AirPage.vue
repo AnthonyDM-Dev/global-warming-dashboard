@@ -58,11 +58,10 @@
 
 <script>
 // Utilities
-import { watch, onMounted, toRefs } from '@nuxtjs/composition-api'
+import { watch, onMounted } from '@nuxtjs/composition-api'
 import airData from '../../composables/pages/index/air/airData'
 // Composables
 import useChartFunctions from '../../composables/chartjs/useChartFunctions'
-import useConverters from '../../composables/global/useConverters'
 import useBarChart from '../../composables/chartjs/useBarChart'
 import useLineChart from '../../composables/chartjs/useLineChart'
 import useAirForm from '../../composables/forms/useAirForm'
@@ -107,46 +106,26 @@ export default {
       default: null
     }
   },
-  setup (props, context) {
-    const { formatTime } = useConverters()
-    const { updateChartData, filterData } = useChartFunctions()
+  setup (props) {
     const {
-      airForm, locations, resetForm, airResponse, historyResponse, searchCity, getCoordinates, resWatcher
+      updateChartData, filterData
+    } = useChartFunctions()
+    const {
+      locations, resetForm, getCoordinates, fetchStartingDataset, isPending, searchCity
     } = useAirForm()
     const {
       lineChartDataConfig, lineChartMobileConfig, lineFieldsToParse, filters, settings, legend, pageDescription, barChartDataConfig, barChartMobileConfig, barFieldsToParse
     } = airData()
     const {
-      lineData, lineFilteredData, lineChartData, hasLineFilteredData, setLineChartData
+      lineData, lineFilteredData, lineChartData, hasLineFilteredData, setLineChartData, resetLineChart
     } = useLineChart()
     const {
-      barData, hasBarData, barChartData, barChartArray, addToBarChartArray, setBarChartData
+      barData, hasBarData, barChartData, setBarChartData
     } = useBarChart()
 
-    watch(airResponse, (newVal) => {
-      if (newVal.data) {
-        addToBarChartArray(airForm.value, locations.value, newVal)
-        barData.value = barChartArray.value
-      }
-    }, { deep: true })
-
-    watch(historyResponse, (newVal) => {
-      if (newVal.data) {
-        lineData.value = formatTime(historyResponse.value.data.list, 'unix', ['dt'])
-      }
-    }, { deep: true })
-
-    watch(resWatcher, (newVal) => {
-      if (newVal.error) {
-        context.emit('trigger-popup')
-      }
-    }, { deep: true })
-
-    watch(filters, (newVal) => {
-      lineFilteredData.value = filterData(lineData.value, 'time', 'months', newVal.selected)
-    }, { deep: true })
     const changeFilter = (event) => {
       filters.value.selected = event
+      lineFilteredData.value = filterData(lineData.value, 'time', 'months', filters.value.selected)
     }
 
     watch(lineFilteredData, (newVal) => {
@@ -165,8 +144,9 @@ export default {
       updateChartData(settings.value, 'barChart', barChartData.value)
     }, { deep: true })
 
-    onMounted(() => {
-      airForm.value = document.forms.air
+    onMounted(async () => {
+      resetLineChart()
+      await fetchStartingDataset()
     })
 
     return {
@@ -181,7 +161,7 @@ export default {
       changeFilter,
       legend,
       pageDescription,
-      ...toRefs(resWatcher)
+      isPending
     }
   }
 }
