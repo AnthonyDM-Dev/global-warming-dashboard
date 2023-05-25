@@ -58,7 +58,6 @@
 
 <script>
 // Utilities
-import { watch, onMounted } from '@nuxtjs/composition-api'
 import airData from '../../composables/pages/index/air/airData'
 // Composables
 import useChartFunctions from '../../composables/chartjs/useChartFunctions'

@@ -1,4 +1,3 @@
-import { ref } from '@nuxtjs/composition-api'
 import OWAirPollution from '../../services/api/OWAirPollution'
 
 const airResponse = ref(null)

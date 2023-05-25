@@ -1,5 +1,3 @@
-import { onMounted, ref } from '@nuxtjs/composition-api'
-
 const useScreenOptions = () => {
   const isMobile = ref(null)
 

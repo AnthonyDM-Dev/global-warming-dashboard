@@ -30,7 +30,6 @@
 
 <script>
 // Utilities
-import { watch, onMounted } from '@nuxtjs/composition-api'
 import nitrousData from '../../composables/pages/index/nitrousoxide/nitrousData'
 // Composables
 import useChartFunctions from '../../composables/chartjs/useChartFunctions'

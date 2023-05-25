@@ -1,4 +1,3 @@
-import { ref } from '@nuxtjs/composition-api'
 import OWGeocoding from '../../services/api/OWGeocoding'
 
 const geoResponse = ref(null)

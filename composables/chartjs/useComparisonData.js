@@ -1,5 +1,3 @@
-import { ref } from '@nuxtjs/composition-api'
-
 const useComparisonData = () => {
   const startingDataset = ref([
     { type: 'lessPolluted', city: 'Calgary', state: 'CA', lat: 51.0460954, lon: -114.065465, components: null },

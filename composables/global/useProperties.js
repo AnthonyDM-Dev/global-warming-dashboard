@@ -1,4 +1,3 @@
-import { ref } from '@nuxtjs/composition-api'
 import useAnimations from '../global/useAnimations'
 
 const { fadeOutElement } = useAnimations()

@@ -1,5 +1,3 @@
-import { ref } from '@nuxtjs/composition-api'
-
 const chartConfig = () => {
   const lineChartDataConfig = {
     labels: null,

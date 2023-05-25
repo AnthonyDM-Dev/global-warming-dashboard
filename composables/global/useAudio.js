@@ -1,5 +1,3 @@
-import { ref } from '@nuxtjs/composition-api'
-
 const audio = ref({
   isPlaying: false,
   isMuted: false,

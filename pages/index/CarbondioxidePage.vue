@@ -30,7 +30,6 @@
 
 <script>
 // Utilities
-import { watch, onMounted } from '@nuxtjs/composition-api'
 import carbonData from '../../composables/pages/index/carbondioxide/carbonData'
 // Composables
 import useChartFunctions from '../../composables/chartjs/useChartFunctions'

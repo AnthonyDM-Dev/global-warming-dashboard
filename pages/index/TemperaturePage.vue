@@ -30,7 +30,6 @@
 
 <script>
 // Utilities
-import { watch, onMounted } from '@nuxtjs/composition-api'
 import temperatureData from '../../composables/pages/index/temperature/temperatureData'
 // Composables
 import useChartFunctions from '../../composables/chartjs/useChartFunctions'

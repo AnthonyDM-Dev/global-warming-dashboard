@@ -1,4 +1,3 @@
-import { ref } from '@nuxtjs/composition-api'
 import Globalwarming from '../../services/api/Globalwarming'
 
 export default function useGlobalwarmingAPI (options) {

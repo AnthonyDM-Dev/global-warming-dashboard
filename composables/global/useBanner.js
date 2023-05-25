@@ -1,4 +1,3 @@
-import { ref } from '@nuxtjs/composition-api'
 import useAudio from '../global/useAudio'
 import useIntro from '../global/useIntro'
 

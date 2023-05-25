@@ -1,4 +1,3 @@
-import { ref, computed } from '@nuxtjs/composition-api'
 import useConverters from '../global/useConverters'
 import useComparisonData from './useComparisonData'
 import useChartFunctions from './useChartFunctions'

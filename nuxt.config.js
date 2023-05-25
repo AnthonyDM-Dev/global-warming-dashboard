@@ -1,4 +1,6 @@
-export default {
+import { defineNuxtConfig } from '@nuxt/bridge'
+
+export default defineNuxtConfig({
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
     title: 'iEarth',
@@ -44,9 +46,7 @@ export default {
     // https://go.nuxtjs.dev/eslint
     '@nuxtjs/eslint-module',
     '@nuxtjs/google-fonts',
-    '@nuxt/typescript-build',
-    '@nuxtjs/dotenv',
-    '@nuxtjs/composition-api/module'
+    '@nuxtjs/dotenv'
   ],
 
   eslint: {
@@ -93,4 +93,4 @@ export default {
       }
     }
   }
-}
+})

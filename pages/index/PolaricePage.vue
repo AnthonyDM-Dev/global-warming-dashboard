@@ -30,7 +30,6 @@
 
 <script>
 // Utilities
-import { watch, onMounted } from '@nuxtjs/composition-api'
 import polariceData from '../../composables/pages/index/polarice/polariceData'
 // Composables
 import useChartFunctions from '../../composables/chartjs/useChartFunctions'

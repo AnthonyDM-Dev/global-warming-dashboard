@@ -1,4 +1,3 @@
-import { ref, computed } from '@nuxtjs/composition-api'
 import { debounce } from 'debounce'
 import useBarChart from '../chartjs/useBarChart'
 import useLineChart from '../chartjs/useLineChart'

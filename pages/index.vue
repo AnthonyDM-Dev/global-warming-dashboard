@@ -62,7 +62,6 @@
 
 <script>
 // Utilities
-import { onMounted, watch, computed, useRoute, useRouter } from '@nuxtjs/composition-api'
 import { debounce } from 'debounce'
 // Composables
 import useAudio from '../composables/global/useAudio'
@@ -98,10 +97,10 @@ export default {
     const { childPage, changeChildPageVisibility, getNavLink } = useChildPage()
     const { isMobile } = useScreenOptions()
 
-    const path = computed(() => { return route.value.path })
+    const path = computed(() => { return route.path })
     const page = computed(() => {
       return properties.value.list.find((property) => {
-        return property.link === route.value.path
+        return property.link === route.path
       })
     })
     const diveIn = (event) => {

@@ -1,5 +1,3 @@
-import { ref } from '@nuxtjs/composition-api'
-
 const popup = ref({
   isVisible: false,
   title: 'Something went wrong.',
